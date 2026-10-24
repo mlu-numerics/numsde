@@ -110,7 +110,11 @@ addopts = [
 ]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "NUMBER"]
 xfail_strict = true
-filterwarnings = ["error"]
+filterwarnings = [
+  "error",
+  # Emitted by NumPy's Cython extensions when imported on PyPy; harmless.
+  "ignore:cython.collection_type only works on PyPy:RuntimeWarning",
+]
 markers = [
   "slow: long-running statistical tests (run with -m slow)",
   "gpu: tests that need a CUDA device; run locally with `nox -s gpu`",
