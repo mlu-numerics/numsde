@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use NumSDE in your research, please cite it as below."
+type: software
+title: "NumSDE: numerical methods for stochastic differential equations"
+abstract: >-
+  NumSDE is a Python library of numerical methods for stochastic differential
+  equations, written for university teaching and research. It provides tested
+  reference implementations of numerical schemes and tools for empirical
+  convergence studies.
+authors:
+  - family-names: Kruse
+    given-names: Raphael
+    email: raphael.kruse@mathematik.uni-halle.de
+    affiliation: Martin Luther University Halle-Wittenberg
+    orcid: "https://orcid.org/0000-0002-8341-5097"
+repository-code: "https://github.com/mlu-numerics/numsde"
+url: "https://numsde.readthedocs.io"
+license: BSD-3-Clause
+keywords:
+  - stochastic differential equations
+  - numerical analysis
+  - Euler-Maruyama
+  - Milstein
+  - Monte Carlo
