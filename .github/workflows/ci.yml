@@ -73,6 +73,10 @@ jobs:
   tests-pypy:
     name: Tests (PyPy 3.11, NumPy backend)
     runs-on: ubuntu-latest
+    # SciPy publishes no PyPy wheels, so installing it means a source build,
+    # which fails on the standard runner. Kept informational until resolved;
+    # see the pull request discussion of milestone M0.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
         with:
