@@ -81,7 +81,19 @@ jobs:
         with:
           python-version: pypy3.11
       - run: uv sync --frozen --group test
-      - run: uv run pytest
+      - name: Run tests
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run pytest 2>&1 | tee pytest.log
+      # Surface the end of the pytest output as an annotation, so collection
+      # errors (which the annotation plugin does not report) are visible.
+      - name: Report pytest output
+        if: failure()
+        shell: bash
+        run: |
+          body=$(tail -n 60 pytest.log | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=pytest output (PyPy)::${body}"
 
   docs:
     name: Documentation
