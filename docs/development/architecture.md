@@ -75,7 +75,8 @@ next to the formula, and second by performance.
 6. **Open for extension.** Stratonovich calculus, fractional Brownian motion or
    Lévy noise arrive as new problem or noise types; schemes declare what they
    support instead of being rewritten.
-7. **Lean core.** Only NumPy and SciPy are hard dependencies; SymPy,
+7. **Lean core.** Only NumPy and `array-api-compat` are hard dependencies;
+   further libraries (e.g. SciPy) are added only when a module needs them; SymPy,
    matplotlib and PyTorch are optional extras.
 8. **Nothing ships unverified.** Each scheme comes with unit, property and
    convergence tests, a docstring with a runnable example, and a theory page.
@@ -324,7 +325,7 @@ entry by its ID.
 | Repository | `github.com/mlu-numerics/numsde`; `main` protected, every change through a pull request with green CI |
 | License | BSD-3-Clause |
 | Python | ≥ 3.11 |
-| Core dependencies | NumPy, SciPy, `array-api-compat` |
+| Core dependencies | NumPy, `array-api-compat`; SciPy only once a module needs it |
 | Optional extras | `[symbolic]` SymPy, `[plot]` matplotlib, `[torch]` PyTorch, `[all]` |
 | Dev dependency groups | `test`, `lint`, `docs`, `dev` |
 | Build | `hatchling` with `hatch-vcs` (versions from Git tags) |
@@ -400,6 +401,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-24 | GPU tests run locally on the maintainer's machine, not in CI |
 | 2026-10-24 | Documentation hosted on Read the Docs |
 | 2026-10-24 | This page becomes the authoritative architecture document; the planning draft it came from is frozen |
+| 2026-10-24 | SciPy is not a dependency until a module needs it; keeps PyPy installable from wheels |
 | 2026-10-24 | Random numbers drawn with NumPy PCG64 and converted per backend, so seeds reproduce across backends |
 
 ## References

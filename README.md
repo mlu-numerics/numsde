@@ -35,7 +35,7 @@ benchmark suite for comparing new schemes with established ones.
 Once released:
 
 ```bash
-pip install numsde              # NumPy and SciPy only
+pip install numsde              # core: NumPy and array-api-compat
 pip install "numsde[symbolic]"  # + SymPy for symbolic derivatives
 pip install "numsde[plot]"      # + matplotlib
 pip install "numsde[torch]"     # + PyTorch backend
