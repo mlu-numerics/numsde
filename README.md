@@ -1,7 +1,7 @@
 # NumSDE
 
 [![CI](https://github.com/mlu-numerics/numsde/actions/workflows/ci.yml/badge.svg)](https://github.com/mlu-numerics/numsde/actions/workflows/ci.yml)
-[![Documentation](https://readthedocs.org/projects/numsde/badge/?version=latest)](https://numsde.readthedocs.io)
+[![Documentation](https://img.shields.io/readthedocs/numsde/latest?label=docs)](https://numsde.readthedocs.io)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 
 **Numerical methods for stochastic differential equations, for teaching and research.**
@@ -9,10 +9,10 @@
 NumSDE provides readable, thoroughly tested reference implementations of numerical
 schemes for Itô stochastic differential equations
 
-$$
+```math
 \mathrm{d}X_t = f(t, X_t)\,\mathrm{d}t + g(t, X_t)\,\mathrm{d}W_t,
 \qquad X_t \in \mathbb{R}^d,\; W_t \in \mathbb{R}^m,
-$$
+```
 
 together with tools for empirical strong and weak convergence studies and a
 benchmark suite for comparing new schemes with established ones.
