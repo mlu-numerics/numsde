@@ -16,6 +16,11 @@ entries here only refer to their errata ID.
 - GitHub Actions workflows for tests and documentation.
 - Sphinx documentation with MyST, API reference, errata page, bibliography and
   the architecture and roadmap document.
+- `WienerProcess` and `BrownianPath`: sampling of independent Brownian paths
+  on arbitrary grids, refinement with the Brownian bridge, insertion of
+  arbitrary times, and coarsening that sums increments exactly.
+- `uniform_grid` and time-grid validation in `numsde.stepping`.
+- Theory page on Brownian motion and the Brownian bridge.
 - Backend layer: `array_namespace` and `namespace_for` for Array API namespace
   resolution; `RandomNumberGenerator` and `default_rng` for reproducible,
   backend-independent random numbers.

@@ -26,3 +26,9 @@ $$
 
 Theory pages for individual schemes are added together with their
 implementation.
+
+```{toctree}
+:maxdepth: 1
+
+brownian_motion
+```

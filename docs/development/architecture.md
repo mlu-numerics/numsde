@@ -403,6 +403,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-24 | This page becomes the authoritative architecture document; the planning draft it came from is frozen |
 | 2026-10-24 | SciPy is not a dependency until a module needs it; keeps PyPy installable from wheels |
 | 2026-10-24 | Random numbers drawn with NumPy PCG64 and converted per backend, so seeds reproduce across backends |
+| 2026-10-25 | `BrownianPath` stores all paths of a batch on one common grid and is immutable (refine, insert and coarsen return new paths); per-path grids for adaptive step sizes are added in M3 |
 
 ## References
 
