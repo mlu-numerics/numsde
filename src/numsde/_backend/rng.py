@@ -4,7 +4,7 @@ Samples are drawn with NumPy's PCG64 generator and converted to the target
 array namespace afterwards. The same seed therefore yields the same numbers
 on every backend, which keeps results comparable across NumPy and PyTorch.
 Backend-native sampling (e.g. directly on a GPU) may be added later as an
-optimisation behind the same interface.
+optimization behind the same interface.
 """
 
 from __future__ import annotations

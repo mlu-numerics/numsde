@@ -226,7 +226,7 @@ class BrownianPath:
         r"""Add grid points, keeping all values already sampled.
 
         Points inside the grid are sampled from the Brownian bridge,
-        conditioned on the neighbouring values; points after :attr:`t_end`
+        conditioned on the neighboring values; points after :attr:`t_end`
         extend the path with independent increments. Points already on the
         grid are ignored.
 
@@ -315,7 +315,7 @@ class BrownianPath:
         r"""Sample :math:`W` at sorted times strictly inside the grid.
 
         Several new points in one interval are sampled from left to right,
-        each conditioned on its left neighbour (old or new) and the right
+        each conditioned on its left neighbor (old or new) and the right
         grid point. By the Markov property this gives the exact joint law.
         """
         xp = self._xp

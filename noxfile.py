@@ -60,11 +60,12 @@ def gpu(session: nox.Session) -> None:
 
 @nox.session(python=PYTHONS[-1])
 def lint(session: nox.Session) -> None:
-    """Run ruff and mypy."""
+    """Run ruff, mypy and codespell."""
     install(session, "lint")
     session.run("ruff", "check", ".")
     session.run("ruff", "format", "--check", ".")
     session.run("mypy")
+    session.run("codespell")
 
 
 @nox.session(python=PYTHONS[-1])

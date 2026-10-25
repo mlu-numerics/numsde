@@ -24,7 +24,7 @@ W(t_{n+1}) = W(t_n) + \sqrt{h_n}\, Z_n, \qquad Z_n \sim \mathcal{N}(0, I_m)
 \ \text{i.i.d.}
 $$
 
-No discretisation error is involved: the sampled values have exactly the joint
+No discretization error is involved: the sampled values have exactly the joint
 law of Brownian motion at the grid points {cite}`KloedenPlaten1992`.
 
 ## Refinement with the Brownian bridge
@@ -44,7 +44,7 @@ $$
 This is the *Brownian bridge*. By the Markov property, values outside $[s, u]$
 carry no further information, so the formula above is the full conditional
 law. Several new points in one interval are sampled from left to right, each
-conditioned on its left neighbour, which may itself be new, and on $W(u)$.
+conditioned on its left neighbor, which may itself be new, and on $W(u)$.
 Points after the last grid point $t_N$ extend the path with independent
 increments.
 

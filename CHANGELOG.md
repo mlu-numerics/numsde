@@ -14,6 +14,7 @@ entries here only refer to their errata ID.
 - Project infrastructure: packaging with hatchling and hatch-vcs, uv, nox,
   pre-commit, Ruff, mypy (strict), pytest with Hypothesis and coverage.
 - GitHub Actions workflows for tests and documentation.
+- Spell checking with codespell, enforcing US English as in the companion book.
 - Sphinx documentation with MyST, API reference, errata page, bibliography and
   the architecture and roadmap document.
 - `WienerProcess` and `BrownianPath`: sampling of independent Brownian paths

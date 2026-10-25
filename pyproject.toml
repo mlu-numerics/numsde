@@ -65,6 +65,7 @@ lint = [
   "ruff>=0.15",
   "mypy>=1.11",
   "pre-commit>=3.7",
+  "codespell>=2.3",
 ]
 docs = [
   "sphinx>=7.3",
@@ -183,3 +184,15 @@ files = ["src/numsde"]
 [[tool.mypy.overrides]]
 module = ["array_api_compat.*"]
 ignore_missing_imports = true
+
+# --------------------------------------------------------------------------- spelling
+
+[tool.codespell]
+# US English, matching the companion book project; also catches common typos.
+builtin = "clear,rare,en-GB_to_en-US"
+# "-" keeps the default dictionary; the file adds GB->US terms of numerical analysis.
+dictionary = ".codespell-dictionary.txt,-"
+skip = "uv.lock,.codespell-dictionary.txt,./docs/_build,./.venv,./.nox,*.png,*.svg,*.inv"
+# `writeable` is the name of a NumPy array flag.
+ignore-words-list = "writeable"
+check-hidden = false

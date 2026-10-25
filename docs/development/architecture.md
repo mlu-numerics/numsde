@@ -29,7 +29,7 @@ $$
 
 - Itô calculus; finite-dimensional systems driven by an $m$-dimensional Wiener
   process.
-- General noise, with specialised fast paths for scalar, additive, diagonal and
+- General noise, with specialized fast paths for scalar, additive, diagonal and
   commutative noise.
 - Non-stiff problems: explicit one-step and multistep schemes.
 - Superlinearly growing coefficients: tamed, truncated and projected schemes;
@@ -38,7 +38,7 @@ $$
   splitting schemes.
 - Strong convergence first, weak convergence second; multilevel Monte Carlo
   (MLMC).
-- Vectorised simulation of many paths; NumPy backend first, PyTorch (GPU)
+- Vectorized simulation of many paths; NumPy backend first, PyTorch (GPU)
   through the same abstraction.
 - Derivatives supplied by the user or generated symbolically with SymPy.
 
@@ -68,7 +68,7 @@ next to the formula, and second by performance.
 3. **Noise is a first-class object.** A Brownian path can be stored, refined,
    coarsened and reused across schemes and step sizes. This is what makes
    convergence studies, adaptive stepping and MLMC correct.
-4. **Vectorised by default.** Every scheme operates on a batch of paths; a
+4. **Vectorized by default.** Every scheme operates on a batch of paths; a
    single path is a batch of size one.
 5. **Backend-agnostic core.** Numerical code is written against the Python
    Array API standard, so NumPy and PyTorch run the same scheme code.
@@ -156,7 +156,7 @@ The solver is the only place where the abstractions meet:
   `(n_times, n_paths, d)`. A `save` option keeps only the final value or
   selected times for memory-heavy Monte Carlo runs.
 - **Noise types.** `NoiseType` is one of `SCALAR`, `ADDITIVE`, `DIAGONAL`,
-  `COMMUTATIVE`, `GENERAL`. Schemes dispatch on it to specialised fast paths;
+  `COMMUTATIVE`, `GENERAL`. Schemes dispatch on it to specialized fast paths;
   `GENERAL` is always correct.
 - **Capability checks.** Before the time loop, the solver checks that the
   scheme's requirements (derivatives, iterated integrals, noise type, calculus)
@@ -215,7 +215,7 @@ result = study.run()
 result.orders  # fitted strong order per scheme, with confidence intervals
 ```
 
-## Method catalogue
+## Method catalog
 
 The teaching release covers the schemes of milestones M1–M3; orders are the
 classical results under the standard assumptions of each reference.
@@ -263,7 +263,7 @@ $$
   the fine-grid reference restricted to the coarse grid.
 - Orders are estimated by least squares on the log-log data and reported with
   a confidence interval from the Monte Carlo standard error.
-- Weak studies report the Monte Carlo error next to the discretisation error.
+- Weak studies report the Monte Carlo error next to the discretization error.
 - Results are plain data objects with an optional `plot()`.
 
 **Benchmark suite** (`numsde.benchmarks`). A registry of test problems with
@@ -290,8 +290,8 @@ side.
 | Regression tests | pytest + stored reference data | results reproduce numbers from the legacy scripts | every push and PR |
 | Notebooks | myst-nb execution in the docs build | tutorials run end to end | docs build on every PR |
 
-- Ruff for linting and formatting; mypy in strict mode on `src/`; pre-commit
-  runs both before each commit.
+- Ruff for linting and formatting; mypy in strict mode on `src/`; codespell
+  for US spelling; pre-commit runs all three before each commit.
 - Line and branch coverage with a target of 100 %.
 - GitHub-hosted runners have no GPU: the PyTorch path is tested on CPU in CI.
   GPU tests carry the `gpu` marker, are skipped in CI and run on the
@@ -404,6 +404,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-24 | SciPy is not a dependency until a module needs it; keeps PyPy installable from wheels |
 | 2026-10-24 | Random numbers drawn with NumPy PCG64 and converted per backend, so seeds reproduce across backends |
 | 2026-10-25 | `BrownianPath` stores all paths of a batch on one common grid and is immutable (refine, insert and coarsen return new paths); per-path grids for adaptive step sizes are added in M3 |
+| 2026-10-25 | US English throughout code and documentation, matching the book project; enforced with codespell |
 
 ## References
 

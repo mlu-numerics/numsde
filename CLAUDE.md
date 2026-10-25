@@ -12,8 +12,11 @@ These conventions apply to every change in this repository.
 
 ## Conventions
 
-- Project language is English (code, docs, commits, issues), even when the
-  conversation with the maintainer is in German.
+- Project language is US English (code, docs, commits, issues), even when the
+  conversation with the maintainer is in German: "discretized", "vectorized",
+  "behavior", "neighbor". This matches the companion book project; codespell
+  enforces it, and `.codespell-dictionary.txt` holds the numerical-analysis
+  terms its built-in dictionary lacks.
 - Never commit to `main`; work on a branch and open a pull request.
 - Numerical code uses the Array API namespace (`xp = array_namespace(...)`);
   backend-specific code lives only in `src/numsde/_backend/`.
@@ -35,5 +38,6 @@ These conventions apply to every change in this repository.
 uv run pytest --cov
 uv run ruff check . && uv run ruff format --check .
 uv run mypy
+uv run codespell
 NUMSDE_DOCS_OFFLINE=1 uv run sphinx-build -W --keep-going -b html docs docs/_build/html
 ```
