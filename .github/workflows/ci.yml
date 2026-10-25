@@ -107,3 +107,25 @@ jobs:
           python-version: "3.13"
       - run: uv sync --frozen --group docs
       - run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+
+  # Single required status check for branch protection. It succeeds only if
+  # every job listed in `needs` succeeded, so the ruleset does not have to be
+  # updated when jobs are added, renamed or the test matrix changes.
+  # When adding a job above, add it to `needs` as well.
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [lint, tests, tests-all-extras, tests-pypy, docs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results of all required jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::At least one required job did not succeed."
+              exit 1
+            fi
+          done

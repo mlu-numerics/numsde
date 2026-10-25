@@ -21,6 +21,9 @@ These conventions apply to every change in this repository.
   (doctests run in the test suite).
 - Coverage target is 100 % lines and branches; tests for slow statistical
   checks carry `@pytest.mark.slow`, GPU tests `@pytest.mark.gpu`.
+- `main` requires the single status check `CI passed`. A new job in
+  `.github/workflows/ci.yml` must be added to the `needs` list of the
+  `ci-passed` job, otherwise it does not gate merging.
 - Only add bibliography entries whose details were checked against the
   publisher's page or the article.
 - The default strong error is the error uniformly on the grid,
