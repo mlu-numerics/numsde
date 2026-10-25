@@ -1,0 +1,42 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # every night at 02:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  HYPOTHESIS_PROFILE: thorough
+
+jobs:
+  slow-tests:
+    name: Statistical tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen --group test
+      # Exit code 5 means "no tests collected", which is expected until the
+      # first statistical tests exist.
+      - run: uv run pytest -m slow -n auto || [ $? -eq 5 ]
+
+  linkcheck:
+    name: Documentation link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - run: uv sync --frozen --group docs
+      - run: uv run sphinx-build -b linkcheck docs docs/_build/linkcheck

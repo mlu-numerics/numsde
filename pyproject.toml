@@ -1,0 +1,185 @@
+[build-system]
+requires = ["hatchling>=1.25", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "numsde"
+description = "Numerical methods for stochastic differential equations, for teaching and research."
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "Raphael Kruse", email = "raphael.kruse@mathematik.uni-halle.de" }]
+requires-python = ">=3.11"
+dynamic = ["version"]
+keywords = [
+  "stochastic differential equations",
+  "SDE",
+  "numerical analysis",
+  "Euler-Maruyama",
+  "Milstein",
+  "Monte Carlo",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.26",
+  "array-api-compat>=1.9",
+]
+
+[project.optional-dependencies]
+symbolic = ["sympy>=1.12"]
+plot = ["matplotlib>=3.8"]
+torch = ["torch>=2.3"]
+all = ["numsde[symbolic,plot,torch]"]
+
+[project.urls]
+Homepage = "https://github.com/mlu-numerics/numsde"
+Documentation = "https://numsde.readthedocs.io"
+Source = "https://github.com/mlu-numerics/numsde"
+Issues = "https://github.com/mlu-numerics/numsde/issues"
+Changelog = "https://github.com/mlu-numerics/numsde/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+test = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "pytest-xdist>=3.5",
+  "hypothesis>=6.100",
+  "pytest-github-actions-annotate-failures>=0.2",
+]
+lint = [
+  "ruff>=0.15",
+  "mypy>=1.11",
+  "pre-commit>=3.7",
+]
+docs = [
+  "sphinx>=7.3",
+  "myst-parser>=3.0",
+  "myst-nb>=1.1",
+  "numpydoc>=1.7",
+  "pydata-sphinx-theme>=0.15",
+  "sphinxcontrib-bibtex>=2.6",
+]
+dev = [
+  "nox>=2024.4",
+  { include-group = "test" },
+  { include-group = "lint" },
+  { include-group = "docs" },
+]
+
+# --------------------------------------------------------------------------- build
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/numsde/_version.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.github"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/numsde"]
+
+# --------------------------------------------------------------------------- tests
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests", "src/numsde"]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--strict-config",
+  "--doctest-modules",
+  "--import-mode=importlib",
+  "-m", "not slow and not gpu",
+]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "NUMBER"]
+xfail_strict = true
+filterwarnings = [
+  "error",
+  # Emitted by NumPy's Cython extensions when imported on PyPy; harmless.
+  "ignore:cython.collection_type only works on PyPy:RuntimeWarning",
+]
+markers = [
+  "slow: long-running statistical tests (run with -m slow)",
+  "gpu: tests that need a CUDA device; run locally with `nox -s gpu`",
+]
+
+[tool.coverage.run]
+source = ["numsde"]
+branch = true
+omit = ["*/numsde/_version.py"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = true
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@overload",
+  "\\.\\.\\.$",
+]
+
+# --------------------------------------------------------------------------- lint
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+extend-exclude = ["src/numsde/_version.py"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "I",        # isort
+  "N",        # pep8-naming
+  "D",        # pydocstyle
+  "UP",       # pyupgrade
+  "B",        # bugbear
+  "C4",       # comprehensions
+  "SIM",      # simplify
+  "RUF",      # ruff-specific
+  "NPY",      # numpy-specific
+  "PT",       # pytest style
+  "PTH",      # pathlib
+  "TC",       # type-checking imports
+]
+ignore = [
+  "N803",     # mathematical argument names such as `dW` are intended
+  "N806",     # mathematical variable names such as `dW` are intended
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+"docs/**" = ["D"]
+"noxfile.py" = ["D"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+files = ["src/numsde"]
+
+[[tool.mypy.overrides]]
+module = ["array_api_compat.*"]
+ignore_missing_imports = true
