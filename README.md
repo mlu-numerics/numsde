@@ -27,7 +27,7 @@ benchmark suite for comparing new schemes with established ones.
   scheme's empirical convergence order is checked against theory.
 - **Didactic documentation:** a theory page for every scheme and executable
   tutorials.
-- **Vectorised:** many paths are simulated at once; NumPy first, PyTorch (GPU)
+- **Vectorized:** many paths are simulated at once; NumPy first, PyTorch (GPU)
   through the same code via the Python Array API standard.
 
 ## Installation

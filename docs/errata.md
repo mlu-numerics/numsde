@@ -31,7 +31,7 @@ correction in one place and avoids contradicting descriptions.
 | Component | <scheme, module or documentation page> |
 | Description | <what was wrong and why> |
 | Impact | <which results change; whether published numbers or figures need re-running> |
-| Guarding test | <test that now fails on the old behaviour> |
+| Guarding test | <test that now fails on the old behavior> |
 ```
 
 ## Entries

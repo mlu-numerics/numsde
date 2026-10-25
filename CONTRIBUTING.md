@@ -63,8 +63,10 @@ correction is described.
 
 ## Style
 
-- Project language is English: code, comments, docstrings, documentation,
-  commit messages and issues.
+- Project language is US English: code, comments, docstrings, documentation,
+  commit messages and issues ("discretized", "vectorized", "behavior").
+  `codespell` checks this in pre-commit and CI; add missing British-to-US
+  pairs to `.codespell-dictionary.txt`.
 - Mathematical names (`dW`, `h`, `X`) follow the notation of the theory pages.
 - Numerical code uses the Array API namespace (`xp = array_namespace(x)`),
   never `numpy` directly, so that every backend runs the same code.

@@ -30,7 +30,7 @@ def check_independent_gaussian_increments(path):
     assert np.all(np.abs(mean) < 5 * np.sqrt(h / n))
     var = dW.var(axis=1)
     assert np.all(np.abs(var - h) < 5 * standard_error_of_variance(h, n))
-    # Normalised increments must be uncorrelated across steps and components.
+    # Normalized increments must be uncorrelated across steps and components.
     z = (dW / np.sqrt(h)[:, :, None]).transpose(0, 2, 1).reshape(-1, n)
     corr = np.corrcoef(z)
     off_diagonal = corr[~np.eye(corr.shape[0], dtype=bool)]
