@@ -71,3 +71,11 @@ def test_same_seed_same_path(grid, seed):
     a = WienerProcess(2).sample_path(grid, n_paths=2, seed=seed)
     b = WienerProcess(2).sample_path(grid, n_paths=2, seed=seed)
     np.testing.assert_array_equal(a.values, b.values)
+
+
+@given(grid=grids(), seed=seeds, factor=st.integers(min_value=1, max_value=4))
+def test_refine_is_deterministic(grid, seed, factor):
+    path = WienerProcess(2).sample_path(grid, n_paths=2, seed=seed)
+    np.testing.assert_array_equal(
+        path.refine(factor).values, path.refine(factor).values
+    )

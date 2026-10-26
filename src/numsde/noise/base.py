@@ -5,10 +5,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
+from numsde._validation import positive_int
+
 if TYPE_CHECKING:
     from types import ModuleType
 
-    from numsde._backend import RandomNumberGenerator, SeedLike
+    from numsde._backend import SeedLike
     from numsde.stepping.grids import TimeGridLike
 
 __all__ = ["NoiseProcess"]
@@ -29,15 +31,14 @@ class NoiseProcess(ABC):
 
     Raises
     ------
+    TypeError
+        If `dim` is not an integer.
     ValueError
-        If `dim` is not a positive integer.
+        If `dim` is not positive.
     """
 
     def __init__(self, dim: int = 1) -> None:
-        if isinstance(dim, bool) or int(dim) != dim or dim < 1:
-            msg = f"dim must be a positive integer, got {dim!r}."
-            raise ValueError(msg)
-        self._dim = int(dim)
+        self._dim = positive_int(dim, "dim")
 
     @property
     def dim(self) -> int:
@@ -50,7 +51,7 @@ class NoiseProcess(ABC):
         times: TimeGridLike,
         n_paths: int = 1,
         *,
-        seed: SeedLike | RandomNumberGenerator = None,
+        seed: SeedLike = None,
         backend: str | ModuleType | None = None,
         dtype: Any = None,
         device: Any = None,

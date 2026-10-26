@@ -1,12 +1,20 @@
 r"""Wiener process and sampled Brownian paths.
 
-A :class:`BrownianPath` stores the values :math:`W(t_0), \dots, W(t_N)` of
-`n_paths` independent :math:`m`-dimensional Brownian motions on a common time
-grid. New grid points are filled in with the Brownian bridge, conditioned on
-the values already sampled, so a path can be refined at any time without
-changing what is already known about it. Coarsening keeps every `factor`-th
-grid point; the increments of the coarse path are then exactly the sums of the
-fine increments.
+A :class:`BrownianPath` is one fixed realization of `n_paths` independent
+:math:`m`-dimensional Brownian motions on a common time grid. Its contract:
+
+* **Values are owned and immutable.** The constructor copies its input, and
+  every operation returns a new path that shares no memory with the old one.
+  NumPy values are read-only; other backends have no read-only arrays, so
+  their values must not be modified in place.
+* **Operations are pure functions.** A path carries an immutable seed
+  sequence instead of a random number generator. :meth:`BrownianPath.insert`
+  and :meth:`BrownianPath.refine` derive their random numbers from that seed
+  and the requested times, so the same call always returns the same path.
+* **Refinement keeps what is known.** New grid points are sampled from the
+  Brownian bridge, conditioned on the values already on the grid; existing
+  values never change. Coarsening keeps every `factor`-th grid point, so the
+  coarse increments are exactly the sums of the fine increments.
 """
 
 from __future__ import annotations
@@ -19,9 +27,13 @@ import numpy as np
 from numsde._backend import (
     RandomNumberGenerator,
     array_namespace,
-    default_rng,
+    derive_seed_sequence,
+    frozen_seed_sequence,
+    is_real_floating,
     namespace_for,
+    owned_read_only,
 )
+from numsde._validation import positive_int
 from numsde.noise.base import NoiseProcess
 from numsde.stepping.grids import as_time_grid
 
@@ -37,7 +49,7 @@ __all__ = ["BrownianPath", "WienerProcess"]
 
 
 class BrownianPath:
-    r"""Sampled values of independent Brownian motions on a common time grid.
+    r"""One realization of independent Brownian motions on a common time grid.
 
     Most users obtain a path from :meth:`WienerProcess.sample_path`. The
     constructor is useful to wrap values sampled elsewhere, for example
@@ -49,15 +61,20 @@ class BrownianPath:
         Strictly increasing grid :math:`t_0 < \dots < t_N`; a single point is
         allowed.
     values
-        Array of shape ``(N + 1, n_paths, m)`` with the values
-        :math:`W(t_n)` of each path, in any Array API namespace.
-    rng
-        Generator used for later refinements, or a seed for a new one.
+        Real floating-point array of shape ``(N + 1, n_paths, m)`` with the
+        values :math:`W(t_n)`, in any Array API namespace. It is copied.
+    seed
+        Seed from which later refinements derive their random numbers.
+        ``None`` draws fresh entropy, so refinements are reproducible for
+        this path object but not across program runs.
 
     Raises
     ------
+    TypeError
+        If `values` does not have a real floating-point dtype.
     ValueError
-        If `values` does not have shape ``(len(times), n_paths, m)``.
+        If `values` does not have shape ``(len(times), n_paths, m)`` with
+        ``n_paths >= 1`` and ``m >= 1``.
 
     See Also
     --------
@@ -66,9 +83,11 @@ class BrownianPath:
     Examples
     --------
     >>> import numpy as np
-    >>> path = BrownianPath([0.0, 1.0], np.array([[[0.0]], [[0.3]]]))
+    >>> path = BrownianPath([0.0, 1.0], np.array([[[0.0]], [[0.3]]]), seed=1)
     >>> path.increments[:, 0, 0]
     array([0.3])
+    >>> path.values.flags.writeable
+    False
     """
 
     def __init__(
@@ -76,18 +95,54 @@ class BrownianPath:
         times: TimeGridLike,
         values: Any,
         *,
-        rng: SeedLike | RandomNumberGenerator = None,
+        seed: SeedLike = None,
     ) -> None:
-        self._times = as_time_grid(times, min_points=1)
-        self._xp = array_namespace(values)
-        if values.ndim != 3 or values.shape[0] != self._times.size:
+        xp = array_namespace(values)
+        self._init(
+            as_time_grid(times, min_points=1),
+            owned_read_only(values, xp, copy=True),
+            frozen_seed_sequence(seed),
+            xp,
+        )
+
+    @classmethod
+    def _from_owned(
+        cls,
+        times: npt.NDArray[np.float64],
+        values: Any,
+        seed: np.random.SeedSequence,
+        xp: ModuleType,
+    ) -> BrownianPath:
+        """Wrap arrays created internally and referenced nowhere else."""
+        path = cls.__new__(cls)
+        path._init(times, owned_read_only(values, xp, copy=False), seed, xp)
+        return path
+
+    def _init(
+        self,
+        times: npt.NDArray[np.float64],
+        values: Any,
+        seed: np.random.SeedSequence,
+        xp: ModuleType,
+    ) -> None:
+        if not is_real_floating(values, xp):
+            msg = f"values must have a real floating-point dtype, got {values.dtype}."
+            raise TypeError(msg)
+        if (
+            values.ndim != 3
+            or values.shape[0] != times.size
+            or values.shape[1] < 1
+            or values.shape[2] < 1
+        ):
             msg = (
                 "values must have shape (len(times), n_paths, dim) = "
-                f"({self._times.size}, n_paths, dim), got {tuple(values.shape)}."
+                f"({times.size}, n_paths >= 1, dim >= 1), got {tuple(values.shape)}."
             )
             raise ValueError(msg)
+        self._times = times
         self._values = values
-        self._rng = default_rng(rng)
+        self._seed = seed
+        self._xp = xp
 
     # ------------------------------------------------------------------ data
 
@@ -98,14 +153,18 @@ class BrownianPath:
 
     @property
     def values(self) -> Any:
-        """Values :math:`W(t_n)`, shape ``(n_steps + 1, n_paths, dim)``."""
+        """Values :math:`W(t_n)`, shape ``(n_steps + 1, n_paths, dim)``.
+
+        Read-only for NumPy. For other backends the array must not be
+        modified in place.
+        """
         return self._values
 
     @property
     def increments(self) -> Any:
         r"""Increments :math:`\Delta W_n = W(t_{n+1}) - W(t_n)`.
 
-        Shape ``(n_steps, n_paths, dim)``.
+        A new array of shape ``(n_steps, n_paths, dim)``.
         """
         return self._values[1:, ...] - self._values[:-1, ...]
 
@@ -140,9 +199,9 @@ class BrownianPath:
         return float(self._times[-1])
 
     @property
-    def rng(self) -> RandomNumberGenerator:
-        """Generator used for refinements."""
-        return self._rng
+    def seed_sequence(self) -> np.random.SeedSequence:
+        """Seed from which refinements are derived (a fresh copy on each access)."""
+        return frozen_seed_sequence(self._seed)
 
     # ------------------------------------------------------- grid operations
 
@@ -161,13 +220,15 @@ class BrownianPath:
         Returns
         -------
         BrownianPath
-            The coarse path. It shares the random number generator with this
-            path.
+            The coarse path, with its own copy of the values and the same
+            seed.
 
         Raises
         ------
+        TypeError
+            If `factor` is not an integer.
         ValueError
-            If `factor` is not a positive integer dividing :attr:`n_steps`.
+            If `factor` is not positive or does not divide :attr:`n_steps`.
 
         Examples
         --------
@@ -175,54 +236,60 @@ class BrownianPath:
         >>> fine.coarsen(2).times
         array([0. , 0.5, 1. ])
         """
-        _check_factor(factor)
+        factor = positive_int(factor, "factor")
         if self.n_steps % factor != 0:
             msg = f"factor {factor} does not divide the number of steps {self.n_steps}."
             raise ValueError(msg)
-        return BrownianPath(
-            self._times[::factor], self._values[::factor, ...], rng=self._rng
+        values = self._xp.asarray(self._values[::factor, ...], copy=True)
+        return BrownianPath._from_owned(
+            as_time_grid(self._times[::factor], min_points=1),
+            values,
+            self._seed,
+            self._xp,
         )
 
-    def refine(
-        self, factor: int, *, rng: SeedLike | RandomNumberGenerator = None
-    ) -> BrownianPath:
+    def refine(self, factor: int, *, seed: SeedLike = None) -> BrownianPath:
         """Split every step into `factor` equal substeps.
 
         The new values are sampled from the Brownian bridge between the
         existing ones, so ``path.refine(k).coarsen(k)`` reproduces `path`
-        exactly.
+        exactly, and ``path.refine(k)`` returns the same path on every call.
 
         Parameters
         ----------
         factor
             Positive integer.
-        rng
-            Generator or seed for the new samples; defaults to the path's own
-            generator.
+        seed
+            Seed for the new samples. By default they are derived from the
+            path's seed and the new times.
 
         Returns
         -------
         BrownianPath
             The refined path.
 
+        Raises
+        ------
+        TypeError
+            If `factor` is not an integer.
+        ValueError
+            If `factor` is not positive.
+
         Examples
         --------
         >>> path = WienerProcess().sample_path([0.0, 1.0], seed=3)
         >>> path.refine(4).n_steps
         4
+        >>> bool((path.refine(4).values == path.refine(4).values).all())
+        True
         """
-        _check_factor(factor)
+        factor = positive_int(factor, "factor")
         fractions = np.arange(1, factor) / factor
         left = self._times[:-1, None]
         new_times = (left + fractions[None, :] * np.diff(self._times)[:, None]).ravel()
-        return self.insert(new_times, rng=rng)
+        return self.insert(new_times, seed=seed)
 
-    def insert(
-        self,
-        times: TimeGridLike,
-        *,
-        rng: SeedLike | RandomNumberGenerator = None,
-    ) -> BrownianPath:
+    def insert(self, times: TimeGridLike, *, seed: SeedLike = None) -> BrownianPath:
         r"""Add grid points, keeping all values already sampled.
 
         Points inside the grid are sampled from the Brownian bridge,
@@ -234,14 +301,16 @@ class BrownianPath:
         ----------
         times
             New grid points, not smaller than :attr:`t0`; any order.
-        rng
-            Generator or seed for the new samples; defaults to the path's own
-            generator.
+        seed
+            Seed for the new samples. By default they are derived from the
+            path's seed and the new times, so the same call always returns
+            the same path.
 
         Returns
         -------
         BrownianPath
-            The path on the merged grid. It keeps this path's generator.
+            The path on the merged grid, with the same seed as this path. If
+            all times are already on the grid, this path itself.
 
         Raises
         ------
@@ -267,17 +336,21 @@ class BrownianPath:
         new = new[~np.isin(new, self._times)]
         if new.size == 0:
             return self
-        generator = self._rng if rng is None else default_rng(rng)
+        if seed is None:
+            stream = derive_seed_sequence(self._seed, new.astype("<f8").tobytes())
+        else:
+            stream = frozen_seed_sequence(seed)
+        rng = RandomNumberGenerator(stream)
 
         inside = new[new < self.t_end]
         beyond = new[new > self.t_end]
         blocks = [self._values]
         block_times = [self._times]
         if inside.size:
-            blocks.append(self._bridge(inside, generator))
+            blocks.append(self._bridge(inside, rng))
             block_times.append(inside)
         if beyond.size:
-            blocks.append(self._extend(beyond, generator))
+            blocks.append(self._extend(beyond, rng))
             block_times.append(beyond)
 
         xp = self._xp
@@ -285,7 +358,9 @@ class BrownianPath:
         order = np.argsort(merged_times, kind="stable")
         index = xp.asarray(order, device=array_api_compat.device(self._values))
         merged = xp.take(xp.concat(blocks, axis=0), index, axis=0)
-        return BrownianPath(merged_times[order], merged, rng=self._rng)
+        return BrownianPath._from_owned(
+            as_time_grid(merged_times[order], min_points=1), merged, self._seed, xp
+        )
 
     # ------------------------------------------------------------- sampling
 
@@ -392,15 +467,17 @@ class WienerProcess(NoiseProcess):
         times: TimeGridLike,
         n_paths: int = 1,
         *,
-        seed: SeedLike | RandomNumberGenerator = None,
+        seed: SeedLike = None,
         backend: str | ModuleType | None = None,
         dtype: Any = None,
         device: Any = None,
     ) -> BrownianPath:
         r"""Sample independent Brownian paths on a time grid.
 
-        The paths start at :math:`W(t_0) = 0` and have independent increments
-        :math:`\Delta W_n \sim \mathcal{N}(0, h_n I_m)`.
+        The paths start at :math:`W(t_0) = 0` and have increments
+        :math:`\Delta W_n = \sqrt{h_n}\, Z_n`, where :math:`Z_0, Z_1, \dots`
+        are the standard normal samples of ``RandomNumberGenerator(seed)``
+        in order. The seed is stored in the path for later refinements.
 
         Parameters
         ----------
@@ -409,13 +486,14 @@ class WienerProcess(NoiseProcess):
         n_paths
             Number of independent paths, at least 1.
         seed
-            Seed or generator; the same seed gives the same path on every
-            backend.
+            Seed; the same seed gives the same path on every backend.
+            ``None`` draws fresh entropy.
         backend
             Array namespace or backend name such as ``"numpy"`` or
             ``"torch"``. Defaults to NumPy.
         dtype
-            Floating-point dtype of the backend; defaults to double precision.
+            Real floating-point dtype of the backend; defaults to double
+            precision.
         device
             Device of the returned arrays, e.g. ``"cuda"``.
 
@@ -426,8 +504,11 @@ class WienerProcess(NoiseProcess):
 
         Raises
         ------
+        TypeError
+            If `n_paths` is not an integer or `dtype` is not a real
+            floating-point dtype.
         ValueError
-            If the grid is invalid or `n_paths` is not a positive integer.
+            If the grid is invalid or `n_paths` is not positive.
 
         Examples
         --------
@@ -437,22 +518,21 @@ class WienerProcess(NoiseProcess):
         (9, 3, 1)
         """
         grid = as_time_grid(times)
-        if isinstance(n_paths, bool) or int(n_paths) != n_paths or n_paths < 1:
-            msg = f"n_paths must be a positive integer, got {n_paths!r}."
-            raise ValueError(msg)
+        n_paths = positive_int(n_paths, "n_paths")
         xp = namespace_for(backend) if isinstance(backend, str) else backend
         if xp is None:
             xp = namespace_for("numpy")
-        start = xp.zeros(
-            (1, int(n_paths), self.dim),
-            dtype=xp.float64 if dtype is None else dtype,
-            device=device,
+        root = frozen_seed_sequence(seed)
+        start = BrownianPath._from_owned(
+            grid[:1],
+            xp.zeros(
+                (1, n_paths, self.dim),
+                dtype=xp.float64 if dtype is None else dtype,
+                device=device,
+            ),
+            root,
+            xp,
         )
-        return BrownianPath(grid[:1], start, rng=seed).insert(grid[1:])
-
-
-def _check_factor(factor: int) -> None:
-    """Raise unless `factor` is a positive integer."""
-    if isinstance(factor, bool) or int(factor) != factor or factor < 1:
-        msg = f"factor must be a positive integer, got {factor!r}."
-        raise ValueError(msg)
+        rng = RandomNumberGenerator(frozen_seed_sequence(root))
+        values = xp.concat([start.values, start._extend(grid[1:], rng)], axis=0)
+        return BrownianPath._from_owned(grid, values, root, xp)

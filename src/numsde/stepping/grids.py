@@ -13,6 +13,8 @@ from typing import TypeAlias
 import numpy as np
 import numpy.typing as npt
 
+from numsde._validation import finite_float, positive_int
+
 __all__ = ["TimeGridLike", "as_time_grid", "uniform_grid"]
 
 TimeGridLike: TypeAlias = Sequence[float] | npt.NDArray[np.floating]
@@ -27,11 +29,11 @@ def uniform_grid(
     Parameters
     ----------
     t_end
-        Final time :math:`T`.
+        Final time :math:`T`, finite.
     n_steps
-        Number of steps :math:`N`, at least 1.
+        Number of steps :math:`N`, a positive integer.
     t0
-        Initial time :math:`t_0`, smaller than `t_end`.
+        Initial time :math:`t_0`, finite and smaller than `t_end`.
 
     Returns
     -------
@@ -40,21 +42,23 @@ def uniform_grid(
 
     Raises
     ------
+    TypeError
+        If `n_steps` is not an integer or a time is not a real number.
     ValueError
-        If ``n_steps < 1`` or ``t_end <= t0``.
+        If ``n_steps < 1``, a time is not finite, or ``t_end <= t0``.
 
     Examples
     --------
     >>> uniform_grid(1.0, 4)
     array([0.  , 0.25, 0.5 , 0.75, 1.  ])
     """
-    if int(n_steps) != n_steps or n_steps < 1:
-        msg = f"n_steps must be a positive integer, got {n_steps!r}."
-        raise ValueError(msg)
+    n_steps = positive_int(n_steps, "n_steps")
+    t0 = finite_float(t0, "t0")
+    t_end = finite_float(t_end, "t_end")
     if not t_end > t0:
         msg = f"t_end must be larger than t0, got t0={t0!r}, t_end={t_end!r}."
         raise ValueError(msg)
-    return np.linspace(float(t0), float(t_end), int(n_steps) + 1)
+    return np.linspace(t0, t_end, n_steps + 1)
 
 
 def as_time_grid(

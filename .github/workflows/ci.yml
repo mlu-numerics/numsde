@@ -16,6 +16,9 @@ permissions:
 env:
   FORCE_COLOR: "1"
   HYPOTHESIS_PROFILE: ci
+  # Install only the dependency groups a job asks for; uv would otherwise add
+  # the `dev` group (all tools) to every environment.
+  UV_NO_DEFAULT_GROUPS: "1"
 
 jobs:
   lint:
@@ -27,10 +30,10 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen --group lint
-      - run: uv run ruff check --output-format=github .
-      - run: uv run ruff format --check .
-      - run: uv run mypy
-      - run: uv run codespell
+      - run: uv run --no-sync ruff check --output-format=github .
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync mypy
+      - run: uv run --no-sync codespell
 
   tests:
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
@@ -54,7 +57,7 @@ jobs:
           python-version: ${{ matrix.python }}
       # Minimal dependencies only: NumPy and array-api-compat.
       - run: uv sync --frozen --group test
-      - run: uv run pytest --cov --cov-report=term --cov-report=xml
+      - run: uv run --no-sync pytest --cov --cov-report=term --cov-report=xml
 
   tests-all-extras:
     name: Tests with all extras (PyTorch on CPU)
@@ -86,7 +89,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          uv run pytest 2>&1 | tee pytest.log
+          uv run --no-sync pytest 2>&1 | tee pytest.log
       # Surface the end of the pytest output as an annotation, so collection
       # errors (which the annotation plugin does not report) are visible.
       - name: Report pytest output
@@ -107,7 +110,30 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen --group docs
-      - run: uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+      - run: uv run --no-sync sphinx-build -W --keep-going -b html docs docs/_build/html
+
+  package:
+    name: Build and test the wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - run: uv build
+      - name: Check package metadata
+        run: uvx twine check --strict dist/*
+      # Install the wheel into a fresh environment and run the test suite
+      # against it; the source tree is not importable from there.
+      - name: Test the installed wheel
+        run: |
+          uv venv "$RUNNER_TEMP/wheel-env"
+          export VIRTUAL_ENV="$RUNNER_TEMP/wheel-env"
+          uv pip install dist/*.whl pytest hypothesis
+          "$VIRTUAL_ENV/bin/python" -c "import numsde, pathlib; p = pathlib.Path(numsde.__file__); assert 'site-packages' in p.parts, p; assert (p.parent / 'py.typed').exists(); print(numsde.__version__)"
+          "$VIRTUAL_ENV/bin/python" -m pytest tests -o addopts="" -m "not slow and not gpu" -p no:cacheprovider
 
   # Single required status check for branch protection. It succeeds only if
   # every job listed in `needs` succeeded, so the ruleset does not have to be
@@ -116,7 +142,7 @@ jobs:
   ci-passed:
     name: CI passed
     if: always()
-    needs: [lint, tests, tests-all-extras, tests-pypy, docs]
+    needs: [lint, tests, tests-all-extras, tests-pypy, docs, package]
     runs-on: ubuntu-latest
     steps:
       - name: Check results of all required jobs

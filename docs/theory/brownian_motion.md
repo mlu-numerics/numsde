@@ -69,6 +69,26 @@ same Brownian motion. This is the basis of every strong convergence study in
 NumSDE: a path is sampled once on the finest grid, and all coarser
 approximations are computed from its coarsenings.
 
+## A path is a fixed realization
+
+A {class}`~numsde.BrownianPath` behaves like a value, not like a simulation
+that is still running:
+
+- **Its values never change.** The path owns a private copy of its values, and
+  every operation returns a new path that shares no memory with the old one.
+  With NumPy the values are read-only.
+- **Operations are deterministic.** A path carries an immutable seed instead of
+  a random number generator. `insert` and `refine` derive their random numbers
+  from that seed and the requested times, so `path.refine(2)` returns the same
+  path on every call, independent of what was done with the path before.
+
+The second property is weaker than it may sound. Two different requests, for
+example `path.refine(4)` and `path.refine(2).refine(2)`, are both exact samples
+from the conditional law, but they are different samples: the values at the
+common grid points need not agree. Paths that answer every query consistently,
+in any order, need a different construction (a Brownian tree); it is planned
+for adaptive step sizes in milestone M3.
+
 ## Reproducibility across backends
 
 Random numbers are drawn on the host with NumPy's PCG64 generator and then

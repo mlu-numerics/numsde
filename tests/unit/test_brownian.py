@@ -21,16 +21,26 @@ def test_wiener_process_is_a_noise_process():
     assert repr(W) == "WienerProcess(dim=3)"
 
 
-@pytest.mark.parametrize("dim", [0, -1, 1.5, True])
-def test_wiener_process_rejects_bad_dimension(dim):
-    with pytest.raises(ValueError, match="dim"):
+@pytest.mark.parametrize(
+    ("dim", "error"),
+    [(0, ValueError), (-1, ValueError), (1.5, TypeError), (True, TypeError)],
+)
+def test_wiener_process_rejects_bad_dimension(dim, error):
+    with pytest.raises(error, match="dim"):
         WienerProcess(dim)
 
 
-@pytest.mark.parametrize("n_paths", [0, 2.5, True])
-def test_sample_path_rejects_bad_path_count(n_paths):
-    with pytest.raises(ValueError, match="n_paths"):
+@pytest.mark.parametrize(
+    ("n_paths", "error"), [(0, ValueError), (2.5, TypeError), (True, TypeError)]
+)
+def test_sample_path_rejects_bad_path_count(n_paths, error):
+    with pytest.raises(error, match="n_paths"):
         WienerProcess().sample_path([0.0, 1.0], n_paths=n_paths)
+
+
+def test_sample_path_rejects_integer_dtype():
+    with pytest.raises(TypeError, match="real floating-point"):
+        WienerProcess().sample_path([0.0, 1.0], seed=1, dtype=np.int64)
 
 
 def test_sample_path_needs_two_grid_points():
@@ -88,9 +98,9 @@ def test_constructor_validates_shape():
 
 def test_constructor_wraps_existing_values():
     values = np.array([[[0.0]], [[0.5]], [[-0.25]]])
-    path = BrownianPath([0.0, 1.0, 2.0], values, rng=3)
+    path = BrownianPath([0.0, 1.0, 2.0], values, seed=3)
     np.testing.assert_array_equal(path.increments[:, 0, 0], [0.5, -0.75])
-    assert isinstance(path.rng, RandomNumberGenerator)
+    assert path.seed_sequence.entropy == 3
     assert repr(path) == (
         "BrownianPath(t0=0.0, t_end=2.0, n_steps=2, n_paths=1, dim=1)"
     )
@@ -102,7 +112,7 @@ def test_coarsen_sums_increments():
     np.testing.assert_array_equal(coarse.times, fine.times[::3])
     summed = fine.increments.reshape(4, 3, *fine.increments.shape[1:]).sum(axis=1)
     np.testing.assert_allclose(coarse.increments, summed)
-    assert coarse.rng is fine.rng
+    assert coarse.seed_sequence.entropy == fine.seed_sequence.entropy
 
 
 def test_coarsen_by_one_is_identity():
@@ -110,10 +120,20 @@ def test_coarsen_by_one_is_identity():
     np.testing.assert_array_equal(path.coarsen(1).values, path.values)
 
 
-@pytest.mark.parametrize("factor", [0, -2, 1.5, True])
-def test_coarsen_rejects_bad_factor(factor):
-    with pytest.raises(ValueError, match="factor must be a positive integer"):
-        sample().coarsen(factor)
+@pytest.mark.parametrize(
+    ("factor", "error"),
+    [
+        (0, ValueError),
+        (-2, ValueError),
+        (1.5, TypeError),
+        (2.0, TypeError),
+        (True, TypeError),
+    ],
+)
+@pytest.mark.parametrize("method", ["coarsen", "refine"])
+def test_grid_operations_reject_bad_factor(method, factor, error):
+    with pytest.raises(error, match="factor"):
+        getattr(sample(), method)(factor)
 
 
 def test_coarsen_rejects_non_divisor():
@@ -136,9 +156,10 @@ def test_refine_by_one_returns_same_path():
 
 def test_refine_with_explicit_seed_is_reproducible():
     path = sample()
-    a = path.refine(2, rng=11).values
-    b = path.refine(2, rng=11).values
+    a = path.refine(2, seed=11).values
+    b = path.refine(2, seed=11).values
     np.testing.assert_array_equal(a, b)
+    assert not np.array_equal(a, path.refine(2).values)
 
 
 def test_insert_keeps_old_values_and_sorts():
@@ -165,7 +186,7 @@ def test_insert_rejects_non_finite_times():
 
 
 def test_insert_into_single_point_path():
-    start = BrownianPath([0.0], np.zeros((1, 2, 1)), rng=4)
+    start = BrownianPath([0.0], np.zeros((1, 2, 1)), seed=4)
     path = start.insert([1.0, 0.5])
     assert path.n_steps == 2
     assert np.all(path.values[0] == 0.0)
