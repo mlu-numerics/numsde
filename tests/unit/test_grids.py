@@ -11,10 +11,38 @@ def test_uniform_grid_endpoints_and_spacing():
     np.testing.assert_allclose(np.diff(grid), 0.125)
 
 
-@pytest.mark.parametrize("n_steps", [0, -3, 2.5])
-def test_uniform_grid_rejects_bad_step_count(n_steps):
-    with pytest.raises(ValueError, match="n_steps"):
+@pytest.mark.parametrize(
+    ("n_steps", "error"),
+    [
+        (0, ValueError),
+        (-3, ValueError),
+        (2.5, TypeError),
+        (4.0, TypeError),
+        (True, TypeError),
+    ],
+)
+def test_uniform_grid_rejects_bad_step_count(n_steps, error):
+    with pytest.raises(error, match="n_steps"):
         uniform_grid(1.0, n_steps)
+
+
+def test_uniform_grid_accepts_numpy_integers():
+    assert uniform_grid(1.0, np.int64(2)).shape == (3,)
+
+
+@pytest.mark.parametrize(
+    ("t_end", "t0", "error"),
+    [
+        (np.inf, 0.0, ValueError),
+        (np.nan, 0.0, ValueError),
+        (1.0, -np.inf, ValueError),
+        (True, 0.0, TypeError),
+        ("1", 0.0, TypeError),
+    ],
+)
+def test_uniform_grid_rejects_bad_times(t_end, t0, error):
+    with pytest.raises(error):
+        uniform_grid(t_end, 4, t0=t0)
 
 
 def test_uniform_grid_rejects_empty_interval():

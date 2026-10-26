@@ -9,6 +9,7 @@ optimization behind the same interface.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, TypeAlias
 
@@ -17,7 +18,13 @@ import numpy as np
 if TYPE_CHECKING:
     from types import ModuleType
 
-__all__ = ["RandomNumberGenerator", "SeedLike", "default_rng"]
+__all__ = [
+    "RandomNumberGenerator",
+    "SeedLike",
+    "default_rng",
+    "derive_seed_sequence",
+    "frozen_seed_sequence",
+]
 
 SeedLike: TypeAlias = int | Sequence[int] | np.random.SeedSequence | None
 """Values accepted as a seed: an integer, a sequence of integers, a
@@ -151,3 +158,66 @@ def default_rng(seed: SeedLike | RandomNumberGenerator = None) -> RandomNumberGe
     if isinstance(seed, RandomNumberGenerator):
         return seed
     return RandomNumberGenerator(seed)
+
+
+def frozen_seed_sequence(seed: SeedLike) -> np.random.SeedSequence:
+    """Return a new seed sequence with the same entropy and spawn key as `seed`.
+
+    :class:`numpy.random.SeedSequence` counts the children it has spawned, so
+    a shared instance carries mutable state. Objects that must behave as
+    values store a private copy made by this function and never spawn from
+    it.
+
+    Parameters
+    ----------
+    seed
+        A seed or a seed sequence; ``None`` draws fresh entropy.
+
+    Returns
+    -------
+    numpy.random.SeedSequence
+        An independent copy.
+
+    Examples
+    --------
+    >>> frozen_seed_sequence(5).entropy
+    5
+    """
+    if isinstance(seed, np.random.SeedSequence):
+        return np.random.SeedSequence(seed.entropy, spawn_key=seed.spawn_key)
+    return np.random.SeedSequence(seed)
+
+
+def derive_seed_sequence(
+    parent: np.random.SeedSequence, data: bytes
+) -> np.random.SeedSequence:
+    """Derive a child seed sequence deterministically from `parent` and `data`.
+
+    The child extends the parent's spawn key by four 32-bit words of the
+    SHA-256 digest of `data`. The same parent and data always give the same
+    child; different data give statistically independent streams. The parent
+    is not modified.
+
+    Parameters
+    ----------
+    parent
+        Seed sequence to derive from.
+    data
+        Bytes that identify the request, e.g. the times to be sampled.
+
+    Returns
+    -------
+    numpy.random.SeedSequence
+        The derived seed sequence.
+
+    Examples
+    --------
+    >>> root = np.random.SeedSequence(1)
+    >>> a = derive_seed_sequence(root, b"x").generate_state(1)
+    >>> b = derive_seed_sequence(root, b"x").generate_state(1)
+    >>> bool((a == b).all())
+    True
+    """
+    digest = hashlib.sha256(data).digest()
+    words = tuple(int.from_bytes(digest[i : i + 4], "little") for i in range(0, 16, 4))
+    return np.random.SeedSequence(parent.entropy, spawn_key=(*parent.spawn_key, *words))

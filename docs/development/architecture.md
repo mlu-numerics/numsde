@@ -405,6 +405,8 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-24 | Random numbers drawn with NumPy PCG64 and converted per backend, so seeds reproduce across backends |
 | 2026-10-25 | `BrownianPath` stores all paths of a batch on one common grid and is immutable (refine, insert and coarsen return new paths); per-path grids for adaptive step sizes are added in M3 |
 | 2026-10-25 | US English throughout code and documentation, matching the book project; enforced with codespell |
+| 2026-10-26 | A `BrownianPath` is a fixed realization: values owned and immutable, an immutable seed instead of a generator, `insert`/`refine` deterministic in seed and requested times (audit findings A1, A2); Brownian trees are evaluated for M3 |
+| 2026-10-26 | Wrong argument types raise `TypeError`, wrong values `ValueError`; booleans are never accepted as integers |
 
 ## References
 

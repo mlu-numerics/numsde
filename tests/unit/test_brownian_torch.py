@@ -44,3 +44,22 @@ def test_cuda_path_matches_numpy():
     np.testing.assert_allclose(
         path.refine(2).values.cpu().numpy(), ref.refine(2).values
     )
+
+
+def test_torch_derived_paths_share_no_memory():
+    path = WienerProcess().sample_path(
+        uniform_grid(1.0, 4), n_paths=2, seed=3, backend="torch"
+    )
+    reference = path.values.clone()
+    for derived in (path.coarsen(2), path.refine(2), path.insert([0.1])):
+        derived.values.mul_(0.0)  # in-place change of the derived path only
+    assert bool((path.values == reference).all())
+
+
+def test_torch_constructor_copies_its_input():
+    source = torch.zeros((2, 1, 1), dtype=torch.float64)
+    from numsde import BrownianPath
+
+    path = BrownianPath([0.0, 1.0], source, seed=1)
+    source[1, 0, 0] = 5.0
+    assert float(path.values[1, 0, 0]) == 0.0

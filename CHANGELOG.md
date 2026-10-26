@@ -21,6 +21,14 @@ entries here only refer to their errata ID.
   on arbitrary grids, refinement with the Brownian bridge, insertion of
   arbitrary times, and coarsening that sums increments exactly.
 - `uniform_grid` and time-grid validation in `numsde.stepping`.
+- `BrownianPath` contract: values are owned, read-only for NumPy and never
+  shared between paths; `insert` and `refine` are deterministic functions of
+  the path's seed and the requested times; values must be real floating-point
+  with at least one path and one dimension.
+- Consistent input validation: `TypeError` for wrong types (including `bool`
+  and `float` where an integer is expected), `ValueError` for invalid values.
+- CI job that builds the wheel, checks its metadata and runs the test suite
+  against the installed package.
 - Theory page on Brownian motion and the Brownian bridge.
 - Backend layer: `array_namespace` and `namespace_for` for Array API namespace
   resolution; `RandomNumberGenerator` and `default_rng` for reproducible,
