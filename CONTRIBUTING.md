@@ -68,6 +68,8 @@ correction is described.
   `codespell` checks this in pre-commit and CI; add missing British-to-US
   pairs to `.codespell-dictionary.txt`.
 - Mathematical names (`dW`, `h`, `X`) follow the notation of the theory pages.
+  Stochastic processes are written $X(t)$, $W(t)$, never $X_t$: subscripts
+  denote discretizations ($X_h$, $X_h^n$) and increments ($\Delta W_n$).
 - Numerical code uses the Array API namespace (`xp = array_namespace(x)`),
   never `numpy` directly, so that every backend runs the same code.
   Backend-specific code lives in `numsde._backend` only.

@@ -10,8 +10,8 @@ NumSDE provides readable, thoroughly tested reference implementations of numeric
 schemes for Itô stochastic differential equations
 
 ```math
-\mathrm{d}X_t = f(t, X_t)\,\mathrm{d}t + g(t, X_t)\,\mathrm{d}W_t,
-\qquad X_t \in \mathbb{R}^d,\; W_t \in \mathbb{R}^m,
+\mathrm{d}X(t) = f(t, X(t))\,\mathrm{d}t + g(t, X(t))\,\mathrm{d}W(t),
+\qquad X(t) \in \mathbb{R}^d,\; W(t) \in \mathbb{R}^m,
 ```
 
 together with tools for empirical strong and weak convergence studies and a

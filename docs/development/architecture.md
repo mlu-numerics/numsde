@@ -11,8 +11,8 @@ built for university teaching and research. A teaching release must be ready by
 1 September 2027, ahead of the next lecture on the topic.
 
 $$
-\mathrm{d}X_t = f(t, X_t)\,\mathrm{d}t + g(t, X_t)\,\mathrm{d}W_t,
-\qquad X_t \in \mathbb{R}^d,\; W_t \in \mathbb{R}^m,\; g(t,x) \in \mathbb{R}^{d \times m}
+\mathrm{d}X(t) = f(t, X(t))\,\mathrm{d}t + g(t, X(t))\,\mathrm{d}W(t),
+\qquad X(t) \in \mathbb{R}^d,\; W(t) \in \mathbb{R}^m,\; g(t,x) \in \mathbb{R}^{d \times m}
 $$
 
 **Goals**
@@ -549,6 +549,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-26 | M2 split into a core for the teaching release and experimental Lévy-area algorithms (audit A14); stochastic θ-method and BDF2-Maruyama added to phase 2; test problems from the script inventory added to M1 and M3 |
 | 2026-10-26 | M0 completed |
 | 2026-10-27 | BDF2-Maruyama is listed as an implicit two-step scheme with reference {cite}`AnderssonKruse2017`; implicit multistep schemes come with the implicit schemes in phase 2 |
+| 2026-10-27 | Notation: processes as $X(t)$, $W(t)$; subscripts only for discretizations and increments, as in the book project |
 
 ## References
 

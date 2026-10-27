@@ -29,6 +29,9 @@ These conventions apply to every change in this repository.
   `ci-passed` job, otherwise it does not gate merging.
 - Only add bibliography entries whose details were checked against the
   publisher's page or the article.
+- Notation: stochastic processes are written `X(t)`, `W(t)`, never `X_t`;
+  subscripts denote discretizations (`X_h`, `X_h^n`) and increments
+  (`ΔW_n`); components of vector processes use superscripts (`W^j(t)`).
 - The default strong error is the error uniformly on the grid,
   `(E[max_n |X_h^n - X(t_n)|^p])^(1/p)`.
 
