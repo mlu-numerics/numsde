@@ -21,8 +21,8 @@ $$
   multistep schemes for multidimensional SDEs with general noise.
 - Tools for empirical strong and weak convergence studies, plus a benchmark
   suite to test new schemes against established ones from the literature.
-- Didactic documentation: a theory page for every scheme and executable
-  tutorials.
+- Didactic documentation: a theory page for every scheme and every benchmark
+  problem, and executable tutorials.
 - High reliability through layered testing and full coverage.
 
 **In scope**
@@ -79,7 +79,9 @@ next to the formula, and second by performance.
    further libraries (e.g. SciPy) are added only when a module needs them; SymPy,
    matplotlib and PyTorch are optional extras.
 8. **Nothing ships unverified.** Each scheme comes with unit, property and
-   convergence tests, a docstring with a runnable example, and a theory page.
+   convergence tests, a docstring with a runnable example, and a theory page;
+   each benchmark problem comes with tests of its exact solution or reference
+   and a theory page.
 
 ## Package layout
 
@@ -399,6 +401,22 @@ equation, a double-well problem, the Kubo oscillator and the stochastic
 pendulum. A runner compares error and cost (wall time, number of coefficient
 evaluations) of a new scheme against reference schemes.
 
+Every benchmark problem has its own theory page under `docs/theory/problems/`,
+analogous to the scheme pages under `docs/theory/schemes/`. It states
+
+- the equation with its parameters, their default values, and the dimensions
+  $d$ and $m$;
+- the noise structure (scalar, additive, diagonal, commutative or general);
+- the exact solution, or how the reference solution is computed and how
+  accurate it is;
+- the structural properties: which standard assumptions hold or fail (global
+  Lipschitz, superlinear growth, one-sided Lipschitz), moment bounds,
+  invariants and conserved or dissipated quantities;
+- what the problem is meant to test, with the expected strong and weak orders
+  of the relevant schemes and known failure modes (e.g. divergence of
+  Euler–Maruyama for superlinear coefficients);
+- references, and a link to the registry entry.
+
 **Multilevel Monte Carlo** (`numsde.mlmc`). Level estimators from coupled
 coarse and fine paths, level selection and sample allocation following Giles,
 and per-level mean and variance decay, which show weak and strong order side by
@@ -437,7 +455,8 @@ or executed:
 3. Notebooks execute during the build; a broken tutorial breaks the build.
 4. `sphinx-build -W` turns every warning into an error; a scheduled
    `linkcheck` job catches dead external links.
-5. The definition of done for any scheme includes its theory page.
+5. The definition of done for any scheme and any benchmark problem includes
+   its theory page.
 
 {doc}`../errata` is the single place where corrected errors are documented.
 The changelog, release notes, issues and theory pages only link to an errata
@@ -493,6 +512,7 @@ the remaining items follow in phase 2 after the lecture.
 - All schemes of the milestone pass unit, property and statistical tests.
 - Coverage at target, mypy and Ruff clean, docs build with `-W`.
 - Each new scheme has a theory page, a docstring example and a benchmark entry.
+- Each new benchmark problem has a theory page and a registry entry.
 - At least one legacy script is ported onto the new features.
 
 ## Risks and open questions
@@ -550,6 +570,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-26 | M0 completed |
 | 2026-10-27 | BDF2-Maruyama is listed as an implicit two-step scheme with reference {cite}`AnderssonKruse2017`; implicit multistep schemes come with the implicit schemes in phase 2 |
 | 2026-10-27 | Notation: processes as $X(t)$, $W(t)$; subscripts only for discretizations and increments, as in the book project |
+| 2026-10-27 | Every benchmark problem gets its own theory page under `docs/theory/problems/`, analogous to the scheme pages under `docs/theory/schemes/`; part of the definition of done |
 
 ## References
 

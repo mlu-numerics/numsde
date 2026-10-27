@@ -48,8 +48,12 @@ A pull request is ready when:
 - [ ] `ruff check`, `ruff format --check` and `mypy` pass.
 - [ ] Public functions and classes have NumPy-style docstrings with a runnable
       `Examples` section.
-- [ ] New schemes have a theory page under `docs/theory/` with the update rule,
-      convergence orders, assumptions and references.
+- [ ] New schemes have a theory page under `docs/theory/schemes/` with the
+      update rule, convergence orders, assumptions and references.
+- [ ] New benchmark problems have a theory page under `docs/theory/problems/`
+      with the equation and parameters, noise structure, exact or reference
+      solution, structural properties, the purpose of the problem and
+      references (see `docs/theory/problems/index.md`).
 - [ ] References are added to `docs/references.bib` with checked details.
 - [ ] `CHANGELOG.md` has an entry under *Unreleased*.
 - [ ] The documentation builds with `sphinx-build -W`.

@@ -1,5 +1,8 @@
 # Theory
 
+The theory pages explain the mathematics behind the library: one page per
+scheme and one page per benchmark problem.
+
 Every scheme in NumSDE has a theory page with
 
 - the update rule, in the notation used by the implementation,
@@ -32,11 +35,12 @@ e_h^{\mathrm{strong}} = \Big(\mathbb{E}\Big[\max_{n \in \{0,\dots,N\}}
 \big|X_h^n - X(t_n)\big|^p\Big]\Big)^{1/p}.
 $$
 
-Theory pages for individual schemes are added together with their
-implementation.
+Theory pages for individual schemes (under `schemes/`) and benchmark problems
+(under `problems/`) are added together with their implementation.
 
 ```{toctree}
 :maxdepth: 1
 
 brownian_motion
+problems/index
 ```
