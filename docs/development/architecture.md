@@ -95,7 +95,7 @@ numsde/
 │   │   ├── base.py        # Scheme, OneStepScheme, MultiStepScheme
 │   │   ├── explicit/      # Euler–Maruyama, Milstein, Wagner–Platen, SRK
 │   │   ├── nonlinear/     # tamed, truncated, projected schemes
-│   │   ├── multistep/     # Buckwar–Winkler type schemes
+│   │   ├── multistep/     # linear multistep schemes, e.g. BDF2-Maruyama
 │   │   └── geometric/     # symplectic and splitting schemes
 │   ├── stepping/          # time grids, FixedStep, adaptive growth control
 │   ├── solver.py          # Solver: orchestrates problem, scheme, noise, stepping
@@ -336,7 +336,8 @@ the theorem. Entries marked † still have to be checked against the reference.
 | Adaptive growth-controlling Euler–Maruyama (Kelly, Lord) | Adaptive stepping | 0.5 / — | Brownian bridge refinement | M3 |
 | Stochastic Runge–Kutta SRI / SRA (Rößler) | Explicit one-step, higher order | 1.5 (scalar / additive noise) / 2.0 † | — | Phase 2 (M4) |
 | Stochastic θ-method, backward Euler–Maruyama | Implicit one-step | 0.5 / 1.0 | nonlinear solver | Phase 2 |
-| Stochastic linear multistep schemes, e.g. BDF2-Maruyama (Buckwar, Winkler) | Explicit multistep | scheme-dependent | starting procedure | Phase 2 (M4) |
+| BDF2-Maruyama (Andersson, Kruse) | Implicit two-step | 0.5 in mean square under a global monotonicity condition / — | nonlinear solver, starting step (backward Euler–Maruyama) | Phase 2 (M4) |
+| Further stochastic linear multistep schemes (Buckwar, Winkler) | Explicit and implicit multistep | scheme-dependent | starting procedure; nonlinear solver if implicit | Phase 2 (M4) |
 | Stochastic symplectic Euler and Störmer–Verlet type (Milstein, Repin, Tretyakov) | Geometric, 2nd-order SODEs | scheme-dependent | separable Hamiltonian structure | Phase 2 (M4) |
 | Splitting schemes for Langevin dynamics (e.g. BAOAB) | Geometric, 2nd-order SODEs | — / 2.0 for the invariant measure | Langevin structure | Phase 2 (M4) |
 | Derivative-free higher-order schemes via multistep differences | Explicit multistep | to be specified | history buffer | Phase 2 |
@@ -480,7 +481,7 @@ the remaining items follow in phase 2 after the lecture.
 | M2 Milstein and iterated integrals | Feb – Mar 2027 | Core: Milstein for scalar, diagonal and commutative noise; iterated-integrals module with Chen coarsening and one well-tested Lévy-area algorithm for general noise; SymPy derivatives; derivative-free Milstein; Wagner–Platen for scalar and additive noise. Experimental, not required for the teaching release: Wiktorsson and Mrongowius–Rößler algorithms | v0.2 |
 | M3 Superlinear coefficients | Apr – Jun 2027 | tamed, truncated and projected schemes, per-path grids and Kelly–Lord adaptive stepping, evaluation of Brownian trees; test problems stochastic Ginzburg–Landau, 2-D stochastic oscillator, stochastic logistic equation, volatility model | v0.3 |
 | M5 Teaching release | Jul – Aug 2027 | API review, theory pages, tutorials, remaining legacy ports, PyPI release, Zenodo DOI | v0.4 |
-| M4 Higher order and geometric | Phase 2 | Rößler SRK, stochastic θ-method and Buckwar–Winkler multistep schemes (BDF2-Maruyama), `SecondOrderSDE`, symplectic and splitting schemes, weak convergence studies, benchmark runner | v0.5 |
+| M4 Higher order and geometric | Phase 2 | Rößler SRK, stochastic θ-method, BDF2-Maruyama (Andersson–Kruse) and further linear multistep schemes (Buckwar–Winkler), `SecondOrderSDE`, symplectic and splitting schemes, weak convergence studies, benchmark runner | v0.5 |
 | Phase 2, further items | after the lecture | MLMC incl. antithetic variant, GPU performance, derivative-free multistep variants, finite-difference and autodiff derivatives, Stratonovich | towards v1.0 |
 | Phase 3 | later | fractional Brownian motion, Lévy noise, rough paths, implicit schemes | v1.x |
 
@@ -544,6 +545,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-26 | Convergence statistics: per-path data, pathwise bootstrap for order intervals, signed weak bias before absolute values (audit A7) |
 | 2026-10-26 | M2 split into a core for the teaching release and experimental Lévy-area algorithms (audit A14); stochastic θ-method and BDF2-Maruyama added to phase 2; test problems from the script inventory added to M1 and M3 |
 | 2026-10-26 | M0 completed |
+| 2026-10-27 | BDF2-Maruyama is listed as an implicit two-step scheme with reference {cite}`AnderssonKruse2017`; implicit multistep schemes come with the implicit schemes in phase 2 |
 
 ## References
 
@@ -556,7 +558,7 @@ Literature for the planned schemes, by topic. Entries move into
 - *Superlinear coefficients and adaptivity:* Hutzenthaler, Jentzen and Kloeden
   (2012); Wang and Gan (2013); Mao (2015); Beyn, Isaak and Kruse (2016, 2017);
   Kelly and Lord (2018).
-- *Multistep and geometric schemes:* Buckwar and Winkler (2006); Milstein,
+- *Multistep and geometric schemes:* Andersson and Kruse (2017); Buckwar and Winkler (2006); Milstein,
   Repin and Tretyakov (2002); Milstein and Tretyakov (2021); Leimkuhler and
   Matthews (2013); Hairer, Lubich and Wanner (2006).
 - *Multilevel Monte Carlo:* Giles (2008); Giles and Szpruch (2014).
