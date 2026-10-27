@@ -13,6 +13,7 @@ from typing import TypeAlias
 import numpy as np
 import numpy.typing as npt
 
+from numsde._backend import owned_read_only
 from numsde._validation import finite_float, positive_int
 
 __all__ = ["TimeGridLike", "as_time_grid", "uniform_grid"]
@@ -58,7 +59,10 @@ def uniform_grid(
     if not t_end > t0:
         msg = f"t_end must be larger than t0, got t0={t0!r}, t_end={t_end!r}."
         raise ValueError(msg)
-    return np.linspace(t0, t_end, n_steps + 1)
+    with np.errstate(over="ignore", invalid="ignore"):
+        grid = np.linspace(t0, t_end, n_steps + 1)
+    _check_steps(grid)
+    return grid
 
 
 def as_time_grid(
@@ -99,8 +103,31 @@ def as_time_grid(
     if not np.all(np.isfinite(grid)):
         msg = "A time grid must contain only finite values."
         raise ValueError(msg)
-    if np.any(np.diff(grid) <= 0.0):
+    if np.any(grid[1:] <= grid[:-1]):
         msg = "A time grid must be strictly increasing."
         raise ValueError(msg)
-    grid.flags.writeable = False
-    return grid
+    _check_steps(grid)
+    return owned_read_only(grid, np, copy=False)  # type: ignore[no-any-return]
+
+
+def _check_steps(grid: npt.NDArray[np.float64]) -> None:
+    """Reject grids whose step sizes are not finite and strictly positive.
+
+    Both failures come from finite grid points: the difference of two huge
+    times overflows, and distinct points of a fine uniform grid far from zero
+    round to the same float.
+    """
+    with np.errstate(over="ignore", invalid="ignore"):
+        steps = np.diff(grid)
+    if not np.all(np.isfinite(steps)):
+        msg = (
+            "The step sizes of a time grid must be finite; the grid spans too "
+            "large an interval."
+        )
+        raise ValueError(msg)
+    if np.any(steps <= 0.0):
+        msg = (
+            "The step sizes of a time grid must be strictly positive; the steps "
+            "are too small to be resolved in float64 relative to the grid points."
+        )
+        raise ValueError(msg)

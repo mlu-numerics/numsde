@@ -76,7 +76,10 @@ that is still running:
 
 - **Its values never change.** The path owns a private copy of its values, and
   every operation returns a new path that shares no memory with the old one.
-  With NumPy the values are read-only.
+  With NumPy the values and the time grid live in immutable memory, so they
+  cannot be made writeable again. PyTorch has no read-only tensors; there
+  NumSDE only guarantees that no two paths share memory, and the values must
+  not be modified in place.
 - **Operations are deterministic.** A path carries an immutable seed instead of
   a random number generator. `insert` and `refine` derive their random numbers
   from that seed and the requested times, so `path.refine(2)` returns the same

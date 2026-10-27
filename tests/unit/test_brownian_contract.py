@@ -1,7 +1,8 @@
 """The data-ownership and determinism contract of BrownianPath.
 
 Several tests reproduce the counterexamples of the external architecture
-audit of October 2026 (findings A1 to A3) and guard against their return.
+audit of October 2026 (findings A1 to A3) and of its re-audit (finding B1),
+and guard against their return.
 """
 
 import numpy as np
@@ -38,6 +39,14 @@ def test_views_of_values_cannot_be_made_writeable():
     view = sample().values[1:]
     with pytest.raises(ValueError, match="cannot set WRITEABLE"):
         view.flags.writeable = True
+
+
+@pytest.mark.parametrize("attribute", ["values", "times"])
+def test_reaudit_b1_returned_arrays_cannot_be_made_writeable(attribute):
+    path = WienerProcess().sample_path([0.0, 1.0], seed=12)
+    with pytest.raises(ValueError, match="cannot set WRITEABLE"):
+        getattr(path, attribute).flags.writeable = True
+    assert path.t0 == 0.0
 
 
 def test_constructor_copies_its_input():
