@@ -9,8 +9,44 @@ from __future__ import annotations
 
 import math
 import numbers
+from typing import TypeVar
 
-__all__ = ["finite_float", "positive_int"]
+__all__ = ["finite_float", "instance_of", "positive_int"]
+
+T = TypeVar("T")
+
+
+def instance_of(value: object, cls: type[T], name: str) -> T:
+    """Return `value` after checking that it is an instance of `cls`.
+
+    Parameters
+    ----------
+    value
+        Candidate value.
+    cls
+        Required type.
+    name
+        Parameter name used in error messages.
+
+    Returns
+    -------
+    object
+        `value`, typed as an instance of `cls`.
+
+    Raises
+    ------
+    TypeError
+        If `value` is not an instance of `cls`.
+
+    Examples
+    --------
+    >>> instance_of(2, int, "n")
+    2
+    """
+    if not isinstance(value, cls):
+        msg = f"{name} must be a {cls.__name__}, got {type(value).__name__}."
+        raise TypeError(msg)
+    return value
 
 
 def positive_int(value: object, name: str) -> int:

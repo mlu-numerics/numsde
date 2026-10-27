@@ -37,3 +37,15 @@ entries here only refer to their errata ID.
 - Backend layer: `array_namespace` and `namespace_for` for Array API namespace
   resolution; `RandomNumberGenerator` and `default_rng` for reproducible,
   backend-independent random numbers.
+- Problems: `ItoSDE` (base class `SDEProblem`) for user-defined initial value
+  problems, `NoiseStructure` with declared and verified flags, `Calculus`.
+- Step quantities: `StepNoise` and the `NoiseSource` interface;
+  `BrownianPath` is a noise source.
+- `EulerMaruyama` scheme with base classes `Scheme` and `OneStepScheme`.
+- `Solver` and `Solution`: vectorized time loop over a batch of paths, checks
+  of scheme, noise and coefficient shapes before the loop, `save="final"`.
+- Benchmark problems `GeometricBrownianMotion` and `LinearSystem` with exact
+  solutions, and the registry `numsde.benchmarks.PROBLEMS`.
+- `asarray_like` to convert problem parameters to the backend of the state.
+- Theory pages for the Euler–Maruyama scheme, geometric Brownian motion and
+  the linear system.
