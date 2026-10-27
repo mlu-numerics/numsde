@@ -5,7 +5,7 @@ schemes for Itô stochastic differential equations
 
 .. math::
 
-    \mathrm{d}X_t = f(t, X_t)\,\mathrm{d}t + g(t, X_t)\,\mathrm{d}W_t,
+    \mathrm{d}X(t) = f(t, X(t))\,\mathrm{d}t + g(t, X(t))\,\mathrm{d}W(t),
 
 together with tools for empirical convergence studies. It is written for
 university teaching and research.
