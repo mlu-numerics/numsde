@@ -5,8 +5,11 @@ A :class:`BrownianPath` is one fixed realization of `n_paths` independent
 
 * **Values are owned and immutable.** The constructor copies its input, and
   every operation returns a new path that shares no memory with the old one.
-  NumPy values are read-only; other backends have no read-only arrays, so
-  their values must not be modified in place.
+  NumPy values live in an immutable buffer: neither the arrays returned by
+  :attr:`~BrownianPath.values` and :attr:`~BrownianPath.times` nor views of
+  them can be made writeable. Other backends (PyTorch) have no read-only
+  arrays; there the contract only rules out aliasing, and values must not be
+  modified in place.
 * **Operations are pure functions.** A path carries an immutable seed
   sequence instead of a random number generator. :meth:`BrownianPath.insert`
   and :meth:`BrownianPath.refine` derive their random numbers from that seed
@@ -155,7 +158,8 @@ class BrownianPath:
     def values(self) -> Any:
         """Values :math:`W(t_n)`, shape ``(n_steps + 1, n_paths, dim)``.
 
-        Read-only for NumPy. For other backends the array must not be
+        Immutable for NumPy: the array cannot be made writeable. Other
+        backends have no read-only arrays; there the array must not be
         modified in place.
         """
         return self._values

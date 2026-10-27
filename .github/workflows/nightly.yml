@@ -11,6 +11,7 @@ permissions:
 env:
   FORCE_COLOR: "1"
   HYPOTHESIS_PROFILE: thorough
+  UV_NO_DEFAULT_GROUPS: "1"
 
 jobs:
   slow-tests:
@@ -26,7 +27,7 @@ jobs:
       - run: uv sync --frozen --group test
       # Exit code 5 means "no tests collected", which is expected until the
       # first statistical tests exist.
-      - run: uv run pytest -m slow -n auto || [ $? -eq 5 ]
+      - run: uv run --no-sync pytest -m slow -n auto || [ $? -eq 5 ]
 
   linkcheck:
     name: Documentation link check
@@ -39,4 +40,4 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen --group docs
-      - run: uv run sphinx-build -b linkcheck docs docs/_build/linkcheck
+      - run: uv run --no-sync sphinx-build -b linkcheck docs docs/_build/linkcheck

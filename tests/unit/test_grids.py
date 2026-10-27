@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from numsde import WienerProcess
 from numsde.stepping import as_time_grid, uniform_grid
 
 
@@ -70,6 +71,37 @@ def test_as_time_grid_returns_read_only_copy():
 def test_as_time_grid_rejects_invalid_grids(times, message):
     with pytest.raises(ValueError, match=message):
         as_time_grid(times)
+
+
+def test_as_time_grid_cannot_be_made_writeable():
+    with pytest.raises(ValueError, match="cannot set WRITEABLE"):
+        as_time_grid([0.0, 1.0]).flags.writeable = True
+
+
+def test_reaudit_b2_uniform_grid_rejects_unresolvable_steps():
+    # Far from zero, float64 cannot resolve steps of size 0.4.
+    with pytest.raises(ValueError, match="strictly positive"):
+        uniform_grid(1e16 + 4, 10, t0=1e16)
+
+
+def test_reaudit_b2_uniform_grid_rejects_overflowing_interval():
+    with pytest.raises(ValueError, match="finite"):
+        uniform_grid(1e308, 2, t0=-1e308)
+
+
+def test_reaudit_b2_as_time_grid_rejects_overflowing_steps():
+    with pytest.raises(ValueError, match=r"step sizes .* must be finite"):
+        as_time_grid([-1e308, 1e308])
+
+
+def test_reaudit_b2_sampling_rejects_overflowing_steps():
+    with pytest.raises(ValueError, match="must be finite"):
+        WienerProcess().sample_path([-1e308, 1e308], seed=1)
+
+
+def test_large_but_resolvable_grids_are_accepted():
+    grid = uniform_grid(1e16 + 40, 10, t0=1e16)
+    assert np.all(np.diff(grid) > 0.0)
 
 
 def test_as_time_grid_allows_single_point_on_request():

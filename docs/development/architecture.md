@@ -195,21 +195,53 @@ Z^j(s, u) &= Z^j(s, t) + Z^j(t, u) + (u - t)\, \Delta W^j_{s,t}.
 \end{aligned}
 $$
 
-`StepNoise.coarsen` implements these identities, and the property-based tests
-check them. Coarse quantities are never sampled independently of the fine
+`StepNoise.coarsen` will implement these identities, and property-based tests
+will check them. Coarse quantities are never sampled independently of the fine
 ones. When the fine double integrals are themselves approximations (truncated
 Lévy-area expansions), the coarse values are computed from the fine
 approximations by the same rule, so both levels stay consistent.
+
+**Accuracy of approximated integrals.** Consistent coupling does not make an
+approximation accurate enough. A simulator for $\widehat I_{ij} \approx I_{ij}$
+therefore exposes a truncation parameter and documents the bound it
+guarantees for the local error
+$\max_n \big\| I_{ij}(t_n, t_{n+1}) - \widehat I_{ij}(t_n, t_{n+1}) \big\|_{L^2}$
+in terms of that parameter and the step size. The local errors are centered
+and independent across steps, so a bound of order $h^{3/2}$ keeps the strong
+order 1 of the Milstein scheme. The scheme states the order it needs, and the
+solver chooses the truncation parameter from the step size. Chen's relation
+and the accuracy bound are separate requirements with separate tests: the
+first algebraically, the second statistically.
 
 **Streaming instead of storing.** A materialized path of 100 000 paths, 16 384
 steps and $m = 8$ needs about 98 GiB in double precision. The solver therefore
 only requires a `NoiseSource` that yields `StepNoise` objects step by step.
 `BrownianPath` is one implementation for teaching, tests and moderate studies;
-a streaming source that draws increments in time blocks is the other. It must
-reproduce `WienerProcess.sample_path` exactly for the same seed, independent
-of the block size: both draw the normal samples in time order from one
-generator, and a regression test fixes this. Splitting the paths across
-parallel workers uses spawned seeds and is a different, documented realization.
+a streaming source that draws increments in time blocks is the other.
+Reproducibility across the two is specified on two levels, because
+floating-point addition is not associative and summing in blocks changes the
+rounding:
+
+1. *Increments, bitwise.* For the same seed, every source draws the normal
+   samples in time order from one generator and forms
+   $\Delta W_n = \sqrt{h_n}\, \xi_n$ elementwise. The increments, and every
+   `StepNoise` quantity computed from them, are therefore bitwise identical
+   for every block size. This is the guarantee solvers rely on: a streaming
+   solver consumes increments, never accumulated values.
+2. *Accumulated values, up to rounding.* Path values $W(t_n)$ are sums of
+   increments, and their rounding depends on the order of the additions.
+   A streaming source accumulates sequentially,
+   $W(t_{n+1}) = W(t_n) + \Delta W_n$, carrying the last value across blocks;
+   on NumPy this reproduces `sample_path` bitwise, because its cumulative sum
+   is sequential as well. Across backends and devices (a parallel scan on a
+   GPU) values agree only up to rounding. Likewise the increments of a
+   `BrownianPath`, recovered as differences of its values, agree with the
+   drawn increments only up to rounding.
+
+Regression tests check level 1 bitwise for several block sizes and level 2
+with a tolerance proportional to $n\,\varepsilon_{\mathrm{mach}} \max_k |W(t_k)|$.
+Splitting the paths across parallel workers uses spawned seeds and is a
+different, documented realization.
 
 ### Coupling strategies
 
@@ -571,6 +603,8 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-27 | BDF2-Maruyama is listed as an implicit two-step scheme with reference {cite}`AnderssonKruse2017`; implicit multistep schemes come with the implicit schemes in phase 2 |
 | 2026-10-27 | Notation: processes as $X(t)$, $W(t)$; subscripts only for discretizations and increments, as in the book project |
 | 2026-10-27 | Every benchmark problem gets its own theory page under `docs/theory/problems/`, analogous to the scheme pages under `docs/theory/schemes/`; part of the definition of done |
+| 2026-10-27 | Re-audit: `BrownianPath` values and times live in immutable NumPy memory (B1); time grids reject non-finite and unresolvable steps (B2); streaming reproducibility is bitwise for increments and up to rounding for accumulated values (B3); simulators of iterated integrals document a truncation parameter and an accuracy bound (B5) |
+| 2026-10-27 | Re-audit B4: the Brownian-tree contract stays with the evaluation in M3; repeated `insert` calls condition on all known values, which suffices for Kelly–Lord |
 
 ## References
 
