@@ -169,10 +169,10 @@ keeping them apart:
    needs the double Itô integrals
 
    $$
-   I_{ij}(s, t) = \int_s^t \int_s^r \mathrm{d}W^i_u \, \mathrm{d}W^j_r ,
+   I_{ij}(s, t) = \int_s^t \int_s^r \mathrm{d}W^i(u) \, \mathrm{d}W^j(r) ,
    $$
 
-   and Wagner–Platen needs $Z^j(s, t) = I_{(j,0)}(s, t) = \int_s^t (W^j_r - W^j_s)\,\mathrm{d}r$.
+   and Wagner–Platen needs $Z^j(s, t) = I_{(j,0)}(s, t) = \int_s^t \big(W^j(r) - W^j(s)\big)\,\mathrm{d}r$.
 
 A scheme declares in `requires` which quantities it needs, and the source
 computes only those. `Scheme.step` receives a `StepNoise` instead of a bare
