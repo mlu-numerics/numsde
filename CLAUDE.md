@@ -27,6 +27,9 @@ These conventions apply to every change in this repository.
 - `main` requires the single status check `CI passed`. A new job in
   `.github/workflows/ci.yml` must be added to the `needs` list of the
   `ci-passed` job, otherwise it does not gate merging.
+- Every scheme and every benchmark problem has its own theory page
+  (`docs/theory/schemes/`, `docs/theory/problems/`); it belongs to the same
+  pull request as the implementation.
 - Only add bibliography entries whose details were checked against the
   publisher's page or the article.
 - Notation: stochastic processes are written `X(t)`, `W(t)`, never `X_t`;

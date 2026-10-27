@@ -17,6 +17,8 @@ entries here only refer to their errata ID.
 - Spell checking with codespell, enforcing US English as in the companion book.
 - Sphinx documentation with MyST, API reference, errata page, bibliography and
   the architecture and roadmap document.
+- Theory section for benchmark problems: every problem of the benchmark suite
+  gets its own theory page, with a fixed structure.
 - `WienerProcess` and `BrownianPath`: sampling of independent Brownian paths
   on arbitrary grids, refinement with the Brownian bridge, insertion of
   arbitrary times, and coarsening that sums increments exactly.
