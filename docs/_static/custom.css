@@ -1,0 +1,7 @@
+/* Box-drawing diagrams in ```text blocks: a font with full-height
+   box-drawing glyphs and a line height of one, so that vertical strokes
+   connect across lines. */
+div.highlight-text pre {
+  font-family: "DejaVu Sans Mono", "Cascadia Mono", "Consolas", monospace !important;
+  line-height: 1 !important;
+}
