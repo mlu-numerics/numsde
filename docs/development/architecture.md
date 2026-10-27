@@ -115,27 +115,30 @@ numsde/
 The solver is the only place where the abstractions meet:
 
 ```text
-                    ┌────────────────────────────┐
-                    │ Analysis                   │
-                    │ convergence, MLMC, bench.  │
-                    └─────────────┬──────────────┘
-                                  │ calls
-┌──────────────────┐   ┌──────────▼─────────┐   ┌──────────────────┐
-│ Problem          │──▶│ Solver             │──▶│ Solution         │
-│ drift, diffusion │   │ time loop, batch   │   │ times, paths     │
-└──────────────────┘   └──┬───────┬──────┬──┘   └──────────────────┘
-                          │       │      │
-             ┌────────────▼┐  ┌───▼────────────┐  ┌▼────────────────┐
-             │ Scheme      │  │ Noise source   │  │ Step controller │
-             │ step(...)   │  │ yields         │  │ fixed, adaptive │
-             └──┬──────────┘  │ StepNoise      │  └─────────────────┘
-                │             └───┬────────────┘
-   ┌────────────▼──┐  ┌───────────▼──────┐
-   │ Derivatives   │  │ Iterated         │
-   │ user or SymPy │  │ integrals        │
-   └───────────────┘  └──────────────────┘
-   ───────────────────────────────────────────────────────────────
-   Backend: Array API namespace and RNG (NumPy first, PyTorch later)
+                       ┌───────────────────┐
+                       │ Analysis          │
+                       │ convergence, MLMC,│
+                       │ benchmarks        │
+                       └─────────┬─────────┘
+                                 │ calls
+                                 │
+┌───────────────────┐  ┌─────────▼─────────┐  ┌───────────────────┐
+│ Problem           │─▶│ Solver            │─▶│ Solution          │
+│ drift, diffusion  │  │ time loop, batch  │  │ times, paths      │
+└───────────────────┘  └─────────┬─────────┘  └───────────────────┘
+          ┌──────────────────────┼──────────────────────┐
+          ▼                      ▼                      ▼
+┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐
+│ Scheme            │  │ Noise source      │  │ Step controller   │
+│ step(...)         │  │ yields StepNoise  │  │ fixed, adaptive   │
+└─────────┬─────────┘  └─────────┬─────────┘  └───────────────────┘
+          │                      │
+┌─────────▼─────────┐  ┌─────────▼─────────┐
+│ Derivatives       │  │ Iterated          │
+│ user or SymPy     │  │ integrals         │
+└───────────────────┘  └───────────────────┘
+───────────────────────────────────────────────────────────────────
+Backend: Array API namespace and RNG (NumPy first, PyTorch later)
 ```
 
 | Abstraction | Responsibility | Key interface |

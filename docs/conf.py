@@ -72,6 +72,7 @@ if os.environ.get("NUMSDE_DOCS_OFFLINE"):  # build without network access
 html_theme = "pydata_sphinx_theme"
 html_title = f"NumSDE {release}"
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 html_theme_options = {
     "github_url": "https://github.com/mlu-numerics/numsde",
     "navbar_align": "left",
