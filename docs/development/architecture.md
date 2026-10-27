@@ -604,6 +604,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-27 | Notation: processes as $X(t)$, $W(t)$; subscripts only for discretizations and increments, as in the book project |
 | 2026-10-27 | Every benchmark problem gets its own theory page under `docs/theory/problems/`, analogous to the scheme pages under `docs/theory/schemes/`; part of the definition of done |
 | 2026-10-27 | Re-audit: `BrownianPath` values and times live in immutable NumPy memory (B1); time grids reject non-finite and unresolvable steps (B2); streaming reproducibility is bitwise for increments and up to rounding for accumulated values (B3); simulators of iterated integrals document a truncation parameter and an accuracy bound (B5) |
+| 2026-10-27 | Re-audit B4: the Brownian-tree contract stays with the evaluation in M3; repeated `insert` calls condition on all known values, which suffices for Kelly–Lord |
 
 ## References
 
