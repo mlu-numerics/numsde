@@ -10,6 +10,14 @@ Every scheme in NumSDE has a theory page with
 
 ## Notation
 
+Stochastic processes are written with their time argument in parentheses,
+$X(t)$ and $W(t)$, never as $X_t$. Subscripts are reserved for discretizations:
+$X_h$ is a numerical approximation with step size $h$ and $X_h^n$ its value at
+the grid point $t_n$, so that $X_h$ cannot be mistaken for $X(h)$. Increments
+over a step carry subscripts too, for example
+$\Delta W_n = W(t_{n+1}) - W(t_n)$; components of a vector-valued process are
+indexed by superscripts, as in $W^j(t)$.
+
 Throughout, $f\colon [0,T]\times\mathbb{R}^d \to \mathbb{R}^d$ denotes the drift,
 $g\colon [0,T]\times\mathbb{R}^d \to \mathbb{R}^{d\times m}$ the diffusion, and
 $W$ an $m$-dimensional Wiener process. A numerical approximation on the grid
