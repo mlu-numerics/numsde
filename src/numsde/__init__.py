@@ -14,8 +14,23 @@ The package is at an early stage of development; see the roadmap in the
 developer documentation for the planned scope.
 """
 
-from numsde._backend import RandomNumberGenerator, array_namespace, default_rng
-from numsde.noise import BrownianPath, NoiseProcess, WienerProcess
+from numsde import benchmarks, schemes
+from numsde._backend import (
+    RandomNumberGenerator,
+    array_namespace,
+    asarray_like,
+    default_rng,
+)
+from numsde.noise import (
+    BrownianPath,
+    NoiseProcess,
+    NoiseSource,
+    StepNoise,
+    WienerProcess,
+)
+from numsde.problems import Calculus, ItoSDE, NoiseStructure, SDEProblem
+from numsde.solution import Solution
+from numsde.solver import Solver
 from numsde.stepping import uniform_grid
 
 try:
@@ -25,11 +40,22 @@ except ImportError:  # pragma: no cover - only without a build step
 
 __all__ = [
     "BrownianPath",
+    "Calculus",
+    "ItoSDE",
     "NoiseProcess",
+    "NoiseSource",
+    "NoiseStructure",
     "RandomNumberGenerator",
+    "SDEProblem",
+    "Solution",
+    "Solver",
+    "StepNoise",
     "WienerProcess",
     "__version__",
     "array_namespace",
+    "asarray_like",
+    "benchmarks",
     "default_rng",
+    "schemes",
     "uniform_grid",
 ]

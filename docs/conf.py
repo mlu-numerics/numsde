@@ -65,7 +65,11 @@ intersphinx_mapping = {
 if os.environ.get("NUMSDE_DOCS_OFFLINE"):  # build without network access
     intersphinx_mapping = {}
     nitpick_ignore_regex = [
-        (r"py:.*", r"(python:)?(numpy|scipy|types|abc|list|int|str|tuple)(\..*)?")
+        (
+            r"py:.*",
+            r"(python:)?(numpy|scipy|types|abc|enum|list|int|float|bool|str|tuple)"
+            r"(\..*)?",
+        )
     ]
 
 # -- HTML output -------------------------------------------------------------

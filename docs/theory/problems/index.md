@@ -1,6 +1,6 @@
 # Benchmark problems
 
-The benchmark suite (`numsde.benchmarks`, planned) collects test problems for
+The benchmark suite (`numsde.benchmarks`) collects test problems for
 comparing schemes. Every problem has its own page here, analogous to the scheme
 pages, with the following sections:
 
@@ -27,6 +27,12 @@ Purpose
 References
 : Origin of the problem in the literature, and a link to the registry entry.
 
-Pages are added together with the problems; the first ones (geometric Brownian
-motion, a linear system with multidimensional noise, Brownian motion on the
-circle) arrive with milestone M1.
+Pages are added together with the problems. Brownian motion on the circle,
+the third problem of milestone M1, follows with the convergence study.
+
+```{toctree}
+:maxdepth: 1
+
+geometric_brownian_motion
+linear_system
+```

@@ -8,7 +8,13 @@ generation, which the standard does not cover.
 Backend-specific code belongs here and nowhere else.
 """
 
-from numsde._backend.arrays import is_real_floating, owned_read_only
+from numsde._backend.arrays import (
+    asarray_in,
+    asarray_like,
+    device_of,
+    is_real_floating,
+    owned_read_only,
+)
 from numsde._backend.namespace import (
     SUPPORTED_BACKENDS,
     array_namespace,
@@ -27,8 +33,11 @@ __all__ = [
     "RandomNumberGenerator",
     "SeedLike",
     "array_namespace",
+    "asarray_in",
+    "asarray_like",
     "default_rng",
     "derive_seed_sequence",
+    "device_of",
     "frozen_seed_sequence",
     "is_real_floating",
     "namespace_for",

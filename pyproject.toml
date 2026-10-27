@@ -166,6 +166,9 @@ ignore = [
   "N806",     # mathematical variable names such as `dW` are intended
 ]
 
+# The en dash belongs in names such as Euler–Maruyama and Ornstein–Uhlenbeck.
+allowed-confusables = ["–"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 

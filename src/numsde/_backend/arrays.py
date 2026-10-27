@@ -4,12 +4,90 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import array_api_compat
 import numpy as np
 
 if TYPE_CHECKING:
     from types import ModuleType
 
-__all__ = ["is_real_floating", "owned_read_only"]
+__all__ = [
+    "asarray_in",
+    "asarray_like",
+    "device_of",
+    "is_real_floating",
+    "owned_read_only",
+]
+
+
+def device_of(x: Any) -> Any:
+    """Return the device of array `x` (``"cpu"`` for NumPy)."""
+    return array_api_compat.device(x)
+
+
+def asarray_in(value: Any, xp: ModuleType, *, dtype: Any, device: Any) -> Any:
+    """Convert `value` to an array of namespace `xp` with the given dtype and device.
+
+    Read-only NumPy arrays (such as frozen problem parameters) are copied
+    before they are handed to another library, which may not support
+    non-writeable memory.
+
+    Parameters
+    ----------
+    value
+        Array-like data.
+    xp
+        Target Array API namespace.
+    dtype, device
+        Target dtype and device.
+
+    Returns
+    -------
+    array
+        `value` in namespace `xp`.
+
+    Examples
+    --------
+    >>> from numsde._backend import namespace_for
+    >>> asarray_in([1, 2], namespace_for("numpy"), dtype=None, device=None)
+    array([1, 2])
+    """
+    if (
+        isinstance(value, np.ndarray)
+        and not value.flags.writeable
+        and not array_api_compat.is_numpy_namespace(xp)
+    ):
+        value = value.copy()
+    return xp.asarray(value, dtype=dtype, device=device)
+
+
+def asarray_like(value: Any, like: Any) -> Any:
+    """Convert `value` to an array with the namespace, dtype and device of `like`.
+
+    Problem classes use this to turn parameters such as matrices, stored as
+    NumPy arrays or Python numbers, into arrays that can be combined with the
+    state `x`, whatever backend and device the simulation runs on.
+
+    Parameters
+    ----------
+    value
+        Array-like data: a Python number, a nested sequence or an array.
+    like
+        Array whose namespace, dtype and device the result takes.
+
+    Returns
+    -------
+    array
+        `value` in the namespace of `like`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> x = np.zeros(2, dtype=np.float32)
+    >>> asarray_like([[1, 2], [3, 4]], x).dtype
+    dtype('float32')
+    """
+    xp = array_api_compat.array_namespace(like)
+    return asarray_in(value, xp, dtype=like.dtype, device=device_of(like))
 
 
 def owned_read_only(x: Any, xp: ModuleType, *, copy: bool) -> Any:
