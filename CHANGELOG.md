@@ -25,9 +25,10 @@ entries here only refer to their errata ID.
 - `uniform_grid` and time-grid validation in `numsde.stepping`; grids whose
   step sizes overflow or cannot be resolved in float64 are rejected.
 - `BrownianPath` contract: values are owned, immutable for NumPy (they cannot
-  be made writeable again) and never shared between paths; `insert` and `refine` are deterministic functions of
-  the path's seed and the requested times; values must be real floating-point
-  with at least one path and one dimension.
+  be made writeable again) and never shared between paths;
+  `insert` and `refine` are deterministic functions of the path's seed and
+  the requested times; values must be real floating-point with at least one
+  path and one dimension.
 - Consistent input validation: `TypeError` for wrong types (including `bool`
   and `float` where an integer is expected), `ValueError` for invalid values.
 - CI job that builds the wheel, checks its metadata and runs the test suite
