@@ -615,6 +615,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-27 | Ruff accepts the en dash in names such as Euler–Maruyama (`allowed-confusables`) |
 | 2026-11-02 | Review of PR #12, P1: supplied and sampled noise pass the same compatibility check (noise dimension, grid starting at `t0`, namespace, dtype and device of an array `x0`); explicit sampling options must agree with an array `x0` |
 | 2026-11-02 | Review of PR #12, P2: noise-structure flags describe the dependence of $g$ on $x$ only and certify no time regularity; `expected_strong_order` states the order under the assumptions of the theory page, and strong order 1 of Euler–Maruyama for additive noise requires $g$ Lipschitz continuous in $t$ |
+| 2026-11-02 | Text files in the repository contain no control characters other than tab, line feed and carriage return; `tests/unit/test_repository_text.py` enforces this, because Sphinx does not warn when LaTeX such as `\big` was turned into a control character |
 
 ## References
 

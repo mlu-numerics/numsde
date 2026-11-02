@@ -65,7 +65,7 @@ scheme. This removes the error term that limits the order to $1/2$ in
 general, but strong order 1 needs more than additivity: the coefficients must
 also be regular enough *in time*, as stated in the table. Freezing $g$ at the
 left end point leaves the error
-$\sum_n \int_{t_n}^{t_{n+1}} ig(g(s) - g(t_n)ig)\,\mathrm{d}W(s)$. The
+$\sum_n \int_{t_n}^{t_{n+1}} \big(g(s) - g(t_n)\big)\,\mathrm{d}W(s)$. The
 terms are centered and independent, so by the Itô isometry the error is of
 order $h$ if $g$ is Lipschitz continuous in $t$; Hölder continuity of order
 $1/2$, which suffices for the general order $1/2$, does not suffice here.
@@ -76,9 +76,9 @@ Hölder continuous of order $1/2$, but not Lipschitz continuous at $t = 0$. The
 Itô isometry gives
 
 $$
-\mathbb{E}\,ert X(1) - X_h^N ert^2
-= \sum_{n=0}^{N-1} \int_{nh}^{(n+1)h} ig(\sqrt{t} - \sqrt{nh}ig)^2\,\mathrm{d}t
-symp h^2 \log(1/h),
+\mathbb{E}\,\vert X(1) - X_h^N \vert^2
+= \sum_{n=0}^{N-1} \int_{nh}^{(n+1)h} \big(\sqrt{t} - \sqrt{nh}\big)^2\,\mathrm{d}t
+\asymp h^2 \log(1/h),
 $$
 
 because the term with index $n \ge 1$ is about $h^2/(12 n)$. Even the
