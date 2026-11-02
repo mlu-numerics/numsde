@@ -31,8 +31,10 @@ class EulerMaruyama(OneStepScheme):
         X_h^{n+1} = X_h^n + f(t_n, X_h^n)\, h_n + g(t_n, X_h^n)\, \Delta W_n .
 
     Under global Lipschitz and linear-growth conditions it converges with
-    strong order 1/2 and weak order 1; for additive noise and a smooth drift
-    the strong order is 1. The precise assumptions are on the theory page.
+    strong order 1/2 and weak order 1. For additive noise the strong order is
+    1, provided the diffusion is Lipschitz continuous in time and the drift
+    is smooth in space and Lipschitz continuous in time. The precise
+    assumptions are on the theory page.
 
     Examples
     --------
@@ -52,7 +54,15 @@ class EulerMaruyama(OneStepScheme):
     requires: ClassVar[frozenset[str]] = frozenset({"dW"})
 
     def expected_strong_order(self, structure: NoiseStructure) -> float:
-        """Return 1 for additive noise and 1/2 otherwise.
+        r"""Return 1 for additive noise and 1/2 otherwise.
+
+        The value is the order expected under the assumptions of the theory
+        page. The flag ``additive`` describes only how the diffusion depends
+        on the state; it does not certify the time regularity that order 1
+        also needs (the diffusion Lipschitz continuous in time, the drift
+        smooth in space and Lipschitz continuous in time). For a diffusion
+        such as :math:`g(t) = \sqrt{t}` the order is lower although the noise
+        is additive.
 
         Parameters
         ----------

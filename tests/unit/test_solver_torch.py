@@ -71,3 +71,11 @@ def test_cuda_solution_matches_numpy():
     np.testing.assert_allclose(
         x.cpu().numpy(), Solver(problem, EulerMaruyama()).solve(ref).x, rtol=1e-12
     )
+
+
+def test_sampling_rejects_numpy_for_a_tensor_initial_value():
+    # Regression test for review finding P1 on PR #12.
+    problem = LinearSystem(x0=torch.tensor([1.0, 0.5], dtype=torch.float64))
+    solver = Solver(problem, EulerMaruyama())
+    with pytest.raises(ValueError, match="different array libraries"):
+        solver.solve(times=[0.0, 1.0], seed=0, backend="numpy")

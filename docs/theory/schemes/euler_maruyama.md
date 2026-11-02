@@ -53,7 +53,7 @@ deterministic.
 | --- | --- | --- | --- |
 | Strong, final time, $\big(\mathbb{E}\,\vert X_h^N - X(T)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`KloedenPlaten1992`, Section 10.2 † |
 | Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^p\big)^{1/p}$ | $1/2$ | standard, $p \ge 2$ | † reference to be added |
-| Strong, additive noise | $1$ | $g$ independent of $x$; $f$ smooth with bounded derivatives | see below |
+| Strong, additive noise | $1$ | $g = g(t)$ independent of $x$ and Lipschitz continuous in $t$; $f$ twice continuously differentiable in $x$ with bounded first and second derivatives, and Lipschitz continuous in $t$ | † see below |
 | Weak, $\vert \mathbb{E}\,\varphi(X_h^N) - \mathbb{E}\,\varphi(X(T))\vert$ | $1$ | $f$, $g$, $\varphi$ smooth with polynomially bounded derivatives | {cite}`KloedenPlaten1992`, Section 14.1 † |
 
 The library reports the strong error uniformly on the grid by default, as
@@ -61,9 +61,35 @@ described on the {doc}`theory overview <../index>`.
 
 **Additive noise.** If $g$ does not depend on $x$, all derivatives
 $L^i g^j$ vanish and the Euler–Maruyama scheme coincides with the Milstein
-scheme. It therefore inherits the strong order 1 of the Milstein scheme. The
-method {meth}`~numsde.schemes.EulerMaruyama.expected_strong_order` returns 1
-for problems that declare additive noise.
+scheme. This removes the error term that limits the order to $1/2$ in
+general, but strong order 1 needs more than additivity: the coefficients must
+also be regular enough *in time*, as stated in the table. Freezing $g$ at the
+left end point leaves the error
+$\sum_n \int_{t_n}^{t_{n+1}} ig(g(s) - g(t_n)ig)\,\mathrm{d}W(s)$. The
+terms are centered and independent, so by the Itô isometry the error is of
+order $h$ if $g$ is Lipschitz continuous in $t$; Hölder continuity of order
+$1/2$, which suffices for the general order $1/2$, does not suffice here.
+
+*Example.* For $\mathrm{d}X(t) = \sqrt{t}\,\mathrm{d}W(t)$, $X(0) = 0$, on
+$[0, 1]$ with $h = 1/N$, the noise is additive, the drift vanishes and $g$ is
+Hölder continuous of order $1/2$, but not Lipschitz continuous at $t = 0$. The
+Itô isometry gives
+
+$$
+\mathbb{E}\,ert X(1) - X_h^N ert^2
+= \sum_{n=0}^{N-1} \int_{nh}^{(n+1)h} ig(\sqrt{t} - \sqrt{nh}ig)^2\,\mathrm{d}t
+symp h^2 \log(1/h),
+$$
+
+because the term with index $n \ge 1$ is about $h^2/(12 n)$. Even the
+final-time error in $L^2$ is therefore not $O(h)$.
+
+The flags of a {class}`~numsde.NoiseStructure` describe how $g$ depends on
+$x$; they certify nothing about regularity in $t$. Accordingly,
+{meth}`~numsde.schemes.EulerMaruyama.expected_strong_order` returns 1 for a
+problem that declares additive noise *on the assumption* that the time
+regularity of the table holds; for the time-independent benchmark problems it
+does.
 
 **Failure for superlinear coefficients.** Without the global Lipschitz
 condition the scheme may diverge: for drifts that grow faster than linearly,

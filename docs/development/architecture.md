@@ -613,6 +613,8 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-27 | `asarray_like(value, x)` is the public helper with which problems convert parameters (matrices, vectors) to the namespace, dtype and device of the state |
 | 2026-10-27 | Benchmark problems are registered in `numsde.benchmarks.PROBLEMS`; the linear test system is built from a common eigenbasis, so its matrices commute and its exact solution needs no matrix exponential (and no SciPy) |
 | 2026-10-27 | Ruff accepts the en dash in names such as Euler–Maruyama (`allowed-confusables`) |
+| 2026-11-02 | Review of PR #12, P1: supplied and sampled noise pass the same compatibility check (noise dimension, grid starting at `t0`, namespace, dtype and device of an array `x0`); explicit sampling options must agree with an array `x0` |
+| 2026-11-02 | Review of PR #12, P2: noise-structure flags describe the dependence of $g$ on $x$ only and certify no time regularity; `expected_strong_order` states the order under the assumptions of the theory page, and strong order 1 of Euler–Maruyama for additive noise requires $g$ Lipschitz continuous in $t$ |
 
 ## References
 

@@ -129,7 +129,8 @@ class Solver:
         backend, dtype, device
             Namespace (or backend name), dtype and device of a sampled path;
             only without `noise`. They default to those of ``x0`` if it is an
-            array, otherwise to NumPy and float64.
+            array, otherwise to NumPy and float64. If ``x0`` is an array,
+            explicit values must agree with it.
         save
             ``"all"`` stores every grid point, ``"final"`` only the last one.
 
@@ -144,9 +145,27 @@ class Solver:
             If `noise` is not a noise source, or sampling options are
             combined with `noise`.
         ValueError
-            If neither `noise` nor `times` is given, the noise does not match
-            the problem, the source cannot provide the required step
-            quantities, or a coefficient returns an array of the wrong shape.
+            If neither `noise` nor `times` is given; if the noise, supplied or
+            sampled, does not match the problem (noise dimension, grid not
+            starting at ``t0``, or namespace, dtype or device different from
+            an array ``x0``); if the source cannot provide the required step
+            quantities; or if a coefficient returns an array of the wrong
+            shape.
+
+        Examples
+        --------
+        The grid of the noise must start at the initial time of the problem,
+        also when the solver samples the noise itself:
+
+        >>> import numsde as ns
+        >>> problem = ns.benchmarks.GeometricBrownianMotion(t0=2.0)
+        >>> solver = ns.Solver(problem, ns.schemes.EulerMaruyama())
+        >>> solver.solve(times=ns.uniform_grid(3.0, 4, t0=2.0), seed=0).t
+        array([2.  , 2.25, 2.5 , 2.75, 3.  ])
+        >>> solver.solve(times=ns.uniform_grid(1.0, 4), seed=0)  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        ValueError: The noise grid starts at 0.0, but the problem's initial time ...
         """
         if save not in _SAVE_MODES:
             msg = f"save must be one of {_SAVE_MODES}, got {save!r}."
@@ -154,7 +173,11 @@ class Solver:
         if noise is None:
             noise = self._sample_noise(times, n_paths, seed, backend, dtype, device)
         else:
-            self._check_noise(noise, times, n_paths, seed, backend, dtype, device)
+            self._check_no_sampling_options(
+                noise, times, n_paths, seed, backend, dtype, device
+            )
+        # One compatibility check for supplied and sampled noise alike.
+        self._check_compatibility(noise)
         return self._run(noise, save)
 
     # ------------------------------------------------------------- set-up
@@ -190,7 +213,7 @@ class Solver:
             device=device,
         )
 
-    def _check_noise(
+    def _check_no_sampling_options(
         self,
         noise: object,
         times: object,
@@ -218,6 +241,9 @@ class Solver:
                 "source; they only apply when the solver samples the noise."
             )
             raise TypeError(msg)
+
+    def _check_compatibility(self, noise: NoiseSource) -> None:
+        """Check that `noise` can drive the problem; raise ``ValueError`` if not."""
         problem = self._problem
         if noise.dim != problem.noise_dim:
             msg = (
@@ -235,15 +261,18 @@ class Solver:
             x0 = problem.x0
             if array_namespace(x0) is not noise.namespace:
                 msg = (
-                    "x0 and the noise source use different array libraries "
+                    "x0 and the noise use different array libraries "
                     f"({array_namespace(x0).__name__} and "
-                    f"{noise.namespace.__name__})."
+                    f"{noise.namespace.__name__}); an array x0 fixes the "
+                    "backend of the simulation."
                 )
                 raise ValueError(msg)
             if x0.dtype != noise.dtype or device_of(x0) != noise.device:
                 msg = (
-                    f"x0 ({x0.dtype} on {device_of(x0)}) and the noise source "
-                    f"({noise.dtype} on {noise.device}) differ in dtype or device."
+                    f"x0 ({x0.dtype} on {device_of(x0)}) and the noise "
+                    f"({noise.dtype} on {noise.device}) differ in dtype or "
+                    "device; an array x0 fixes the dtype and device of the "
+                    "simulation."
                 )
                 raise ValueError(msg)
 

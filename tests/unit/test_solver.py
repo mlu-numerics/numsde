@@ -111,12 +111,50 @@ def test_sampling_with_explicit_backend_and_dtype(backend):
 
 def test_sampling_follows_an_array_initial_value():
     problem = LinearSystem(x0=np.array([1.0, 0.5], dtype=np.float32))
-    solution = Solver(problem, EulerMaruyama()).solve(times=[0.0, 1.0], seed=0)
-    assert solution.x.dtype == np.float32
-    explicit = Solver(problem, EulerMaruyama()).solve(
-        times=[0.0, 1.0], seed=0, dtype=np.float64, device="cpu"
+    solver = Solver(problem, EulerMaruyama())
+    assert solver.solve(times=[0.0, 1.0], seed=0).x.dtype == np.float32
+    # Explicit options that agree with x0 are accepted.
+    agreeing = solver.solve(times=[0.0, 1.0], seed=0, dtype=np.float32, device="cpu")
+    assert agreeing.x.dtype == np.float32
+
+
+# Regression tests for review finding P1 on PR #12: sampled noise used to skip
+# the compatibility checks that supplied noise passes.
+
+
+@pytest.mark.parametrize("x0_dtype", [np.float32, np.float64])
+def test_sampling_rejects_a_dtype_other_than_an_array_x0(x0_dtype):
+    other = np.float64 if x0_dtype is np.float32 else np.float32
+    problem = LinearSystem(x0=np.array([1.0, 0.5], dtype=x0_dtype))
+    solver = Solver(problem, EulerMaruyama())
+    with pytest.raises(ValueError, match="differ in dtype or device"):
+        solver.solve(times=[0.0, 1.0], seed=0, dtype=other)
+
+
+def test_sampling_rejects_a_backend_other_than_an_array_x0():
+    problem = LinearSystem(x0=np.array([1.0, 0.5]))
+    solver = Solver(problem, EulerMaruyama())
+    with pytest.raises(ValueError, match="different array libraries"):
+        solver.solve(times=[0.0, 1.0], seed=0, backend=np)  # plain NumPy module
+
+
+def test_sampling_rejects_a_grid_not_starting_at_t0():
+    problem = GeometricBrownianMotion(mu=1.0, sigma=0.0, t0=2.0)
+    solver = Solver(problem, EulerMaruyama())
+    grid = uniform_grid(1.0, 4)
+    with pytest.raises(ValueError, match=r"starts at 0.0, but .* t0=2.0"):
+        solver.solve(times=grid, seed=0)
+    # Supplied and sampled noise are rejected alike.
+    with pytest.raises(ValueError, match=r"starts at 0.0, but .* t0=2.0"):
+        solver.solve(WienerProcess(1).sample_path(grid, seed=0))
+
+
+def test_sampling_on_a_grid_starting_at_t0():
+    problem = GeometricBrownianMotion(mu=1.0, sigma=0.0, t0=2.0)
+    solution = Solver(problem, EulerMaruyama()).solve(
+        times=uniform_grid(3.0, 4, t0=2.0), seed=0
     )
-    assert explicit.x.dtype == np.float64
+    np.testing.assert_allclose(solution.final, [[1.25**4]])
 
 
 def test_needs_noise_or_times():
