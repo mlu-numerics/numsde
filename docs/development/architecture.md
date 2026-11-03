@@ -617,7 +617,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-11-02 | Review of PR #12, P2: noise-structure flags describe the dependence of $g$ on $x$ only and certify no time regularity; `expected_strong_order` states the order under the assumptions of the theory page, and strong order 1 of Euler–Maruyama for additive noise requires $g$ Lipschitz continuous in $t$ |
 | 2026-11-02 | Text files in the repository contain no control characters other than tab, line feed and carriage return; `tests/unit/test_repository_text.py` enforces this, because Sphinx does not warn when LaTeX such as `\big` was turned into a control character |
 | 2026-11-03 | The `gpu` nox session fails unless PyTorch can use a CUDA device (otherwise the GPU tests would only be skipped), reuses its environment because the CUDA wheels take several GB, shows the installation output, and accepts `NUMSDE_TORCH_INDEX` for a PyTorch build that matches the local driver |
-| 2026-11-03 | Literature check of the Euler–Maruyama theory page by the maintainer: Kloeden–Platen Theorem 10.2.2 gives the final-time error in $L^1$, the fundamental theorem of Milstein–Tretyakov (2021, Theorem 1.1.1) the final-time error in $L^2$, Mao (2007, Chapter 2, Theorem 7.3) the error uniformly on the grid for $p = 2$, Kloeden–Platen Section 14.1 the weak order; the divergence for superlinear coefficients follows Hutzenthaler–Jentzen–Kloeden (2011). Kanagawa (1988) for $p \ge 2$ stays unchecked and outside `references.bib` |
+| 2026-11-03 | Literature check of the Euler–Maruyama theory page by the maintainer: Kloeden–Platen Theorem 10.2.2 gives the final-time error in $L^1$, the fundamental theorem of Milstein–Tretyakov (2021, Theorem 1.1.1) the final-time error in $L^2$, Mao (2008, Chapter 2, Theorem 7.3) the error uniformly on the grid for $p = 2$, Kloeden–Platen Section 14.1 the weak order; the divergence for superlinear coefficients follows Hutzenthaler–Jentzen–Kloeden (2010). Kanagawa (1988) for $p \ge 2$ stays unchecked and outside `references.bib` |
 
 ## References
 
@@ -627,11 +627,11 @@ Literature for the planned schemes, by topic. Entries move into
 - *Foundations and iterated integrals:* Kloeden and Platen (1992); Kloeden,
   Platen and Wright (1992); Wiktorsson (2001); Mrongowius and Rößler (2022);
   Rößler (2010).
-- *Convergence of Euler–Maruyama:* Milstein and Tretyakov (2021); Mao (2007);
+- *Convergence of Euler–Maruyama:* Milstein and Tretyakov (2021); Mao (2008);
   Kanagawa (1988), *Yokohama Math. J.* 36, 79–86, MR978877, still to be
   checked (strong error uniformly on the grid for $p \ge 2$).
 - *Superlinear coefficients and adaptivity:* Hutzenthaler, Jentzen and Kloeden
-  (2011, 2012); Wang and Gan (2013); Mao (2015); Beyn, Isaak and Kruse (2016,
+  (2010, 2012); Wang and Gan (2013); Mao (2015); Beyn, Isaak and Kruse (2016,
   2017); Kelly and Lord (2018).
 - *Multistep and geometric schemes:* Andersson and Kruse (2017); Buckwar and Winkler (2006); Milstein,
   Repin and Tretyakov (2002); Milstein and Tretyakov (2021); Leimkuhler and

@@ -53,7 +53,7 @@ deterministic.
 | --- | --- | --- | --- |
 | Strong, final time in $L^1$, $\mathbb{E}\,\vert X_h^N - X(T)\vert$ | $1/2$ | standard | {cite}`KloedenPlaten1992`, Theorem 10.2.2 |
 | Strong, final time in $L^2$, $\big(\mathbb{E}\,\vert X_h^N - X(T)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`MilsteinTretyakov2021`, Theorem 1.1.1 (fundamental theorem on mean-square order of convergence) |
-| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`Mao2007`, Chapter 2, Theorem 7.3 |
+| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`Mao2008`, Chapter 2, Theorem 7.3 |
 | Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^p\big)^{1/p}$ | $1/2$ | standard, $p \ge 2$ | Kanagawa (1988), *Yokohama Math. J.* 36, 79–86 † |
 | Strong, additive noise | $1$ | $g = g(t)$ independent of $x$ and Lipschitz continuous in $t$; $f$ twice continuously differentiable in $x$ with bounded first and second derivatives, and Lipschitz continuous in $t$ | † see below |
 | Weak, $\vert \mathbb{E}\,\varphi(X_h^N) - \mathbb{E}\,\varphi(X(T))\vert$ | $1$ | $f$, $g$, $\varphi$ smooth with polynomially bounded derivatives | {cite}`KloedenPlaten1992`, Section 14.1 |
@@ -106,7 +106,7 @@ does.
 condition the scheme may diverge although the exact solution has finite
 moments. For a scalar SDE
 $\mathrm{d}X(t) = f(X(t))\,\mathrm{d}t + g(X(t))\,\mathrm{d}W(t)$ on a uniform
-grid, {cite}`HutzenthalerJentzenKloeden2011`, Theorem 2.1, shows: if one
+grid, {cite}`HutzenthalerJentzenKloeden2010`, Theorem 2.1, shows: if one
 coefficient grows superlinearly and the other more slowly, that is, for some
 $C > 0$, $\beta > 1$ and $0 \le \alpha < \beta$ and all $\vert x\vert \ge C$,
 
@@ -149,5 +149,5 @@ projected variants for this case follow in milestone M3.
 
 ## References
 
-{cite}`KloedenPlaten1992`, {cite}`MilsteinTretyakov2021`, {cite}`Mao2007`,
-{cite}`HutzenthalerJentzenKloeden2011`; Kanagawa (1988), not yet checked.
+{cite}`KloedenPlaten1992`, {cite}`MilsteinTretyakov2021`, {cite}`Mao2008`,
+{cite}`HutzenthalerJentzenKloeden2010`; Kanagawa (1988), not yet checked.
