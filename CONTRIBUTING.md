@@ -22,10 +22,18 @@ Common tasks:
 | Fast test suite | `uv run pytest` |
 | Tests with coverage | `uv run pytest --cov` |
 | Statistical (slow) tests | `uv run pytest -m slow` |
-| GPU tests (local CUDA device) | `nox -s gpu` |
+| GPU tests (local CUDA device) | `nox -s gpu` (see below) |
 | Lint and type check | `nox -s lint` |
 | Build the documentation | `nox -s docs` |
 | Everything CI runs | `nox` |
+
+The GPU session installs PyTorch with its CUDA libraries, several GB on the
+first run, and reuses that environment afterwards. It fails if PyTorch cannot
+use a CUDA device, so a passing run means the GPU tests really ran. If the
+driver is older than the CUDA version of the PyTorch wheels on PyPI (see
+`nvidia-smi`), choose a matching build, for example
+`NUMSDE_TORCH_INDEX=https://download.pytorch.org/whl/cu128 nox -s gpu`, and
+recreate the environment once with `--reuse-venv=never`.
 
 Without network access, build the documentation with
 `NUMSDE_DOCS_OFFLINE=1`, which skips links to external API documentation.
