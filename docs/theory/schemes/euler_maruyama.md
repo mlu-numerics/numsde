@@ -51,10 +51,21 @@ deterministic.
 
 | Error | Order | Assumptions | Reference |
 | --- | --- | --- | --- |
-| Strong, final time, $\big(\mathbb{E}\,\vert X_h^N - X(T)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`KloedenPlaten1992`, Section 10.2 † |
-| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^p\big)^{1/p}$ | $1/2$ | standard, $p \ge 2$ | † reference to be added |
+| Strong, final time in $L^1$, $\mathbb{E}\,\vert X_h^N - X(T)\vert$ | $1/2$ | standard | {cite}`KloedenPlaten1992`, Theorem 10.2.2 |
+| Strong, final time in $L^2$, $\big(\mathbb{E}\,\vert X_h^N - X(T)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`MilsteinTretyakov2021`, Theorem 1.1.1 (fundamental theorem on mean-square order of convergence) |
+| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`Mao2007`, Chapter 2, Theorem 7.3 |
+| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^p\big)^{1/p}$ | $1/2$ | standard, $p \ge 2$ | Kanagawa (1988), *Yokohama Math. J.* 36, 79–86 † |
 | Strong, additive noise | $1$ | $g = g(t)$ independent of $x$ and Lipschitz continuous in $t$; $f$ twice continuously differentiable in $x$ with bounded first and second derivatives, and Lipschitz continuous in $t$ | † see below |
-| Weak, $\vert \mathbb{E}\,\varphi(X_h^N) - \mathbb{E}\,\varphi(X(T))\vert$ | $1$ | $f$, $g$, $\varphi$ smooth with polynomially bounded derivatives | {cite}`KloedenPlaten1992`, Section 14.1 † |
+| Weak, $\vert \mathbb{E}\,\varphi(X_h^N) - \mathbb{E}\,\varphi(X(T))\vert$ | $1$ | $f$, $g$, $\varphi$ smooth with polynomially bounded derivatives | {cite}`KloedenPlaten1992`, Section 14.1 |
+
+† Not yet checked against the source. Kanagawa (1988) is said to contain the
+proof for $p \ge 2$; the article could not be consulted so far, so it is not
+yet in the bibliography.
+
+The $L^1$ and $L^2$ errors at the final time are bounded by the $L^2$ error
+uniformly on the grid, so order $1/2$ of the latter implies order $1/2$ of
+both. The fundamental theorem bounds $\max_n \big(\mathbb{E}\,\vert X_h^n -
+X(t_n)\vert^2\big)^{1/2}$, with the maximum outside the expectation.
 
 The library reports the strong error uniformly on the grid by default, as
 described on the {doc}`theory overview <../index>`.
@@ -92,10 +103,35 @@ regularity of the table holds; for the time-independent benchmark problems it
 does.
 
 **Failure for superlinear coefficients.** Without the global Lipschitz
-condition the scheme may diverge: for drifts that grow faster than linearly,
-the moments of $X_h^N$ can blow up as $h \to 0$ even though the exact solution
-has bounded moments (†, reference to be added). Tamed, truncated and projected
-variants for this case follow in milestone M3.
+condition the scheme may diverge although the exact solution has finite
+moments. For a scalar SDE
+$\mathrm{d}X(t) = f(X(t))\,\mathrm{d}t + g(X(t))\,\mathrm{d}W(t)$ on a uniform
+grid, {cite}`HutzenthalerJentzenKloeden2011`, Theorem 2.1, shows: if one
+coefficient grows superlinearly and the other more slowly, that is, for some
+$C > 0$, $\beta > 1$ and $0 \le \alpha < \beta$ and all $\vert x\vert \ge C$,
+
+$$
+\vert f(x)\vert \ge \frac{\vert x\vert^\beta}{C}
+\quad\text{and}\quad \vert g(x)\vert \le C \vert x\vert^\alpha,
+$$
+
+or the same with $f$ and $g$ exchanged, and if $g(X(0)) \ne 0$ with positive
+probability, then for every $p \in [1, \infty)$ with
+$\mathbb{E}\,\vert X(T)\vert^p < \infty$
+
+$$
+\lim_{N \to \infty} \mathbb{E}\,\vert X(T) - X_h^N\vert^p = \infty
+\quad\text{and}\quad
+\lim_{N \to \infty} \big\vert \mathbb{E}\,\vert X(T)\vert^p
+- \mathbb{E}\,\vert X_h^N\vert^p \big\vert = \infty .
+$$
+
+The scheme thus diverges in the strong and in the numerically weak sense. The
+reason is a sequence of events of at least exponentially small probability on
+which the approximation grows at least double-exponentially fast. The
+standard example is $\mathrm{d}X(t) = -X(t)^3\,\mathrm{d}t + \mathrm{d}W(t)$,
+whose solution has finite moments of every order. Tamed, truncated and
+projected variants for this case follow in milestone M3.
 
 ## Tests
 
@@ -113,4 +149,5 @@ variants for this case follow in milestone M3.
 
 ## References
 
-{cite}`KloedenPlaten1992`
+{cite}`KloedenPlaten1992`, {cite}`MilsteinTretyakov2021`, {cite}`Mao2007`,
+{cite}`HutzenthalerJentzenKloeden2011`; Kanagawa (1988), not yet checked.
