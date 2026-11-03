@@ -31,6 +31,7 @@ from numsde._backend import (
     RandomNumberGenerator,
     array_namespace,
     derive_seed_sequence,
+    device_of,
     frozen_seed_sequence,
     is_real_floating,
     namespace_for,
@@ -38,9 +39,11 @@ from numsde._backend import (
 )
 from numsde._validation import positive_int
 from numsde.noise.base import NoiseProcess
+from numsde.noise.steps import NoiseSource, StepNoise
 from numsde.stepping.grids import as_time_grid
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from types import ModuleType
 
     import numpy.typing as npt
@@ -51,12 +54,14 @@ if TYPE_CHECKING:
 __all__ = ["BrownianPath", "WienerProcess"]
 
 
-class BrownianPath:
+class BrownianPath(NoiseSource):
     r"""One realization of independent Brownian motions on a common time grid.
 
     Most users obtain a path from :meth:`WienerProcess.sample_path`. The
     constructor is useful to wrap values sampled elsewhere, for example
-    reference data from an existing script.
+    reference data from an existing script. A path is a
+    :class:`~numsde.NoiseSource`: :meth:`~numsde.NoiseSource.steps` yields
+    the increments of consecutive steps, so a path can drive a solver.
 
     Parameters
     ----------
@@ -201,6 +206,21 @@ class BrownianPath:
     def t_end(self) -> float:
         """Last grid point."""
         return float(self._times[-1])
+
+    @property
+    def namespace(self) -> ModuleType:
+        """Array API namespace of the values."""
+        return self._xp
+
+    @property
+    def dtype(self) -> Any:
+        """Dtype of the values."""
+        return self._values.dtype
+
+    @property
+    def device(self) -> Any:
+        """Device of the values."""
+        return device_of(self._values)
 
     @property
     def seed_sequence(self) -> np.random.SeedSequence:
@@ -365,6 +385,18 @@ class BrownianPath:
         return BrownianPath._from_owned(
             as_time_grid(merged_times[order], min_points=1), merged, self._seed, xp
         )
+
+    # ---------------------------------------------------------- noise source
+
+    def _steps(self, requires: frozenset[str]) -> Iterator[StepNoise]:
+        r"""Yield :math:`h_n` and :math:`\Delta W_n` for every step."""
+        times = self._times
+        for n in range(self.n_steps):
+            yield StepNoise(
+                t=float(times[n]),
+                h=float(times[n + 1] - times[n]),
+                dW=self._values[n + 1, ...] - self._values[n, ...],
+            )
 
     # ------------------------------------------------------------- sampling
 

@@ -8,12 +8,29 @@ Usage::
     nox -s lint docs
 """
 
+import os
+
 import nox
 
 nox.options.default_venv_backend = "uv"
 nox.options.sessions = ["lint", "tests", "docs"]
 
 PYTHONS = ["3.11", "3.12", "3.13", "3.14"]
+
+# Fails the GPU session if PyTorch cannot use a CUDA device. Without this
+# check the GPU tests would only be skipped and the session would pass.
+CHECK_CUDA = """
+import sys, torch
+print(f"PyTorch {torch.__version__}, built for CUDA {torch.version.cuda}")
+if not torch.cuda.is_available():
+    sys.exit(
+        "No usable CUDA device. Check the driver with `nvidia-smi`: its CUDA "
+        "version must be at least the one PyTorch was built for. Otherwise set "
+        "NUMSDE_TORCH_INDEX to a matching wheel index, e.g. "
+        "https://download.pytorch.org/whl/cu128, and run `nox -s gpu` again."
+    )
+print(f"CUDA device: {torch.cuda.get_device_name(0)}")
+"""
 
 
 def install(session: nox.Session, *groups: str, extras: str = "") -> None:
@@ -51,11 +68,25 @@ def slow(session: nox.Session) -> None:
     session.run("pytest", "-m", "slow", "-n", "auto", *session.posargs)
 
 
-@nox.session(python=PYTHONS[-1], venv_backend="uv")
+@nox.session(python=PYTHONS[-1], venv_backend="uv", reuse_venv=True)
 def gpu(session: nox.Session) -> None:
-    """Run GPU tests locally; requires a CUDA device."""
-    install(session, "test", extras="torch")
-    session.run("pytest", "-m", "gpu", *session.posargs)
+    """Run GPU tests locally; requires a CUDA device.
+
+    PyTorch wheels bundle the CUDA libraries, several GB on the first run, so
+    the installation output is shown and the environment is reused across
+    runs; NumSDE itself is reinstalled every time. Set ``NUMSDE_TORCH_INDEX``
+    to a PyTorch wheel index that matches the local driver, for example
+    ``https://download.pytorch.org/whl/cu128``; by default PyTorch comes from
+    PyPI.
+    """
+    index = os.environ.get("NUMSDE_TORCH_INDEX")
+    if index:
+        session.install("torch", "--index-url", index, silent=False)
+    session.install(
+        ".[torch]", "--group", "test", "--reinstall-package", "numsde", silent=False
+    )
+    session.run("python", "-c", CHECK_CUDA)
+    session.run("pytest", "-m", "gpu", "-rs", *session.posargs)
 
 
 @nox.session(python=PYTHONS[-1])

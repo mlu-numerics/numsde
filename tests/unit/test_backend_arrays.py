@@ -64,3 +64,27 @@ def test_is_real_floating():
     assert is_real_floating(np.ones(1, dtype=np.float32), xp)
     assert not is_real_floating(np.ones(1, dtype=np.int32), xp)
     assert not is_real_floating(np.ones(1, dtype=np.complex64), xp)
+
+
+def test_asarray_in_copies_read_only_arrays_for_other_libraries():
+    import types
+
+    from numsde._backend import asarray_in
+
+    fake = types.ModuleType("fake_backend")
+    fake.asarray = lambda value, dtype=None, device=None: value
+    frozen = np.ones(3)
+    frozen.flags.writeable = False
+    converted = asarray_in(frozen, fake, dtype=None, device=None)
+    assert converted is not frozen
+    assert converted.flags.writeable
+    # NumPy itself keeps read-only arrays as they are.
+    same = asarray_in(frozen, namespace_for("numpy"), dtype=None, device=None)
+    assert not same.flags.writeable
+
+
+def test_asarray_like_follows_dtype_of_the_reference():
+    from numsde._backend import asarray_like
+
+    x = np.zeros(2, dtype=np.float32)
+    assert asarray_like([1.0, 2.0], x).dtype == np.float32

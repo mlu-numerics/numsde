@@ -13,7 +13,7 @@ $$
 together with tools for empirical convergence studies.
 
 :::{note}
-NumSDE is in early development (milestone M0, foundations). The planned scope is
+NumSDE is in early development (milestone M1, core and Euler–Maruyama). The planned scope is
 described in the {doc}`architecture and roadmap <development/architecture>`.
 :::
 

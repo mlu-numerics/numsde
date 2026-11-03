@@ -145,16 +145,16 @@ Backend: Array API namespace and RNG (NumPy first, PyTorch later)
 
 | Abstraction | Responsibility | Key interface |
 | --- | --- | --- |
-| `SDEProblem` / `ItoSDE` | Defines the equation; subclassed by the user | `dim`, `noise_dim`, `structure`, `x0`, `drift(t, x)`, `diffusion(t, x)`, optional `exact_solution(t, W)` |
+| `SDEProblem` / `ItoSDE` | Defines the initial value problem; subclassed by the user | `dim`, `noise_dim`, `structure`, `x0`, `t0`, `drift(t, x)`, `diffusion(t, x)`, optional `exact_solution(t, W)` |
 | `SecondOrderSDE` | Second-order SODE in position/momentum form | `force(t, q, p)`, `diffusion(t, q, p)`, reduction to a first-order system |
 | Derivative provider | Supplies derivatives needed by higher-order schemes | user-supplied methods or `SymbolicDerivatives` (SymPy) |
 | `NoiseProcess` | Law of the driving noise | `WienerProcess(dim)`; later fBm, Lévy noise |
-| `NoiseSource` | Delivers the random quantities of consecutive steps | `steps(grid) -> Iterator[StepNoise]` |
+| `NoiseSource` | Delivers the random quantities of consecutive steps on its own grid | `steps(requires) -> Iterator[StepNoise]`, `provides` |
 | `BrownianPath` | A materialized realization; one kind of `NoiseSource` | `refine`, `insert`, `coarsen`, `steps` |
 | `StepNoise` | Everything random a scheme needs for one step | `h`, `dW`, on request `I` (double integrals), `Z` |
 | `Scheme` | One update rule; declares orders and requirements | `step(problem, t, x, noise, state)`, `requires`, `init_state` |
 | `StepController` | Chooses the next step size | `FixedStep`, `AdaptiveGrowthControl` |
-| `Solver` / `Solution` | Runs the time loop over a batch of paths and stores the result | `solve(n_paths, seed)`, `Solution.t`, `Solution.x` |
+| `Solver` / `Solution` | Runs the time loop over a batch of paths and stores the result | `solve(noise)` or `solve(times=..., n_paths=..., seed=...)`, `Solution.t`, `Solution.x` |
 
 ### Noise: law, realization and step quantities
 
@@ -306,8 +306,9 @@ always correct.
 
 ## API sketch
 
-The names below are a sketch for M1. The example becomes a runnable
-integration test in M1; until then it documents intent, not working code.
+The names below are a sketch for M1. The part up to `solve` runs as the
+integration test `tests/unit/test_api_sketch.py`; the convergence study
+follows later in M1, until then that part documents intent, not working code.
 
 ```python
 import numsde as ns
@@ -605,6 +606,18 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-10-27 | Every benchmark problem gets its own theory page under `docs/theory/problems/`, analogous to the scheme pages under `docs/theory/schemes/`; part of the definition of done |
 | 2026-10-27 | Re-audit: `BrownianPath` values and times live in immutable NumPy memory (B1); time grids reject non-finite and unresolvable steps (B2); streaming reproducibility is bitwise for increments and up to rounding for accumulated values (B3); simulators of iterated integrals document a truncation parameter and an accuracy bound (B5) |
 | 2026-10-27 | Re-audit B4: the Brownian-tree contract stays with the evaluation in M3; repeated `insert` calls condition on all known values, which suffices for Kelly–Lord |
+| 2026-10-27 | M1 starts with an end-to-end slice: `ItoSDE`, `NoiseStructure`, `StepNoise`, `NoiseSource`, `Scheme`, `EulerMaruyama`, `Solver`, `Solution`, benchmark problems GBM and a linear system with commuting matrices; streaming source, convergence study, Brownian motion on the circle and the tutorial follow |
+| 2026-10-27 | A noise source iterates over its own grid, `steps(requires)`; other step sizes come from `BrownianPath.coarsen`, so every grid is an explicit realization |
+| 2026-10-27 | A problem is an initial value problem with initial time `t0`; the noise grid must start at `t0`, and `exact_solution(t, W)` receives $W(t) - W(t_0)$; `drift` and `diffusion` receive `t` as a Python float |
+| 2026-10-27 | Given a noise source, the solver runs in its namespace, dtype and device, and an array `x0` must agree with it; without a source the solver samples a Wiener path on `times`, following `x0` or explicit `backend`, `dtype`, `device` |
+| 2026-10-27 | `asarray_like(value, x)` is the public helper with which problems convert parameters (matrices, vectors) to the namespace, dtype and device of the state |
+| 2026-10-27 | Benchmark problems are registered in `numsde.benchmarks.PROBLEMS`; the linear test system is built from a common eigenbasis, so its matrices commute and its exact solution needs no matrix exponential (and no SciPy) |
+| 2026-10-27 | Ruff accepts the en dash in names such as Euler–Maruyama (`allowed-confusables`) |
+| 2026-11-02 | Review of PR #12, P1: supplied and sampled noise pass the same compatibility check (noise dimension, grid starting at `t0`, namespace, dtype and device of an array `x0`); explicit sampling options must agree with an array `x0` |
+| 2026-11-02 | Review of PR #12, P2: noise-structure flags describe the dependence of $g$ on $x$ only and certify no time regularity; `expected_strong_order` states the order under the assumptions of the theory page, and strong order 1 of Euler–Maruyama for additive noise requires $g$ Lipschitz continuous in $t$ |
+| 2026-11-02 | Text files in the repository contain no control characters other than tab, line feed and carriage return; `tests/unit/test_repository_text.py` enforces this, because Sphinx does not warn when LaTeX such as `\big` was turned into a control character |
+| 2026-11-03 | The `gpu` nox session fails unless PyTorch can use a CUDA device (otherwise the GPU tests would only be skipped), reuses its environment because the CUDA wheels take several GB, shows the installation output, and accepts `NUMSDE_TORCH_INDEX` for a PyTorch build that matches the local driver |
+| 2026-11-03 | Literature check of the Euler–Maruyama theory page by the maintainer: Kloeden–Platen Theorem 10.2.2 gives the final-time error in $L^1$, the fundamental theorem of Milstein–Tretyakov (2021, Theorem 1.1.1) the final-time error in $L^2$, Mao (2008, Chapter 2, Theorem 7.3) the error uniformly on the grid for $p = 2$, Kloeden–Platen Section 14.1 the weak order; the divergence for superlinear coefficients follows Hutzenthaler–Jentzen–Kloeden (2011). Kanagawa (1988) for $p \ge 2$ stays unchecked and outside `references.bib` |
 
 ## References
 
@@ -614,9 +627,12 @@ Literature for the planned schemes, by topic. Entries move into
 - *Foundations and iterated integrals:* Kloeden and Platen (1992); Kloeden,
   Platen and Wright (1992); Wiktorsson (2001); Mrongowius and Rößler (2022);
   Rößler (2010).
+- *Convergence of Euler–Maruyama:* Milstein and Tretyakov (2021); Mao (2008);
+  Kanagawa (1988), *Yokohama Math. J.* 36, 79–86, MR978877, still to be
+  checked (strong error uniformly on the grid for $p \ge 2$).
 - *Superlinear coefficients and adaptivity:* Hutzenthaler, Jentzen and Kloeden
-  (2012); Wang and Gan (2013); Mao (2015); Beyn, Isaak and Kruse (2016, 2017);
-  Kelly and Lord (2018).
+  (2011, 2012); Wang and Gan (2013); Mao (2015); Beyn, Isaak and Kruse (2016,
+  2017); Kelly and Lord (2018).
 - *Multistep and geometric schemes:* Andersson and Kruse (2017); Buckwar and Winkler (2006); Milstein,
   Repin and Tretyakov (2002); Milstein and Tretyakov (2021); Leimkuhler and
   Matthews (2013); Hairer, Lubich and Wanner (2006).
