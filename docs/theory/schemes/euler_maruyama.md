@@ -106,7 +106,7 @@ does.
 condition the scheme may diverge although the exact solution has finite
 moments. For a scalar SDE
 $\mathrm{d}X(t) = f(X(t))\,\mathrm{d}t + g(X(t))\,\mathrm{d}W(t)$ on a uniform
-grid, {cite}`HutzenthalerJentzenKloeden2010`, Theorem 2.1, shows: if one
+grid, {cite}`HutzenthalerJentzenKloeden2011`, Theorem 2.1, shows: if one
 coefficient grows superlinearly and the other more slowly, that is, for some
 $C > 0$, $\beta > 1$ and $0 \le \alpha < \beta$ and all $\vert x\vert \ge C$,
 
@@ -150,4 +150,4 @@ projected variants for this case follow in milestone M3.
 ## References
 
 {cite}`KloedenPlaten1992`, {cite}`MilsteinTretyakov2021`, {cite}`Mao2008`,
-{cite}`HutzenthalerJentzenKloeden2010`; Kanagawa (1988), not yet checked.
+{cite}`HutzenthalerJentzenKloeden2011`; Kanagawa (1988), not yet checked.
