@@ -49,3 +49,6 @@ entries here only refer to their errata ID.
 - `asarray_like` to convert problem parameters to the backend of the state.
 - Theory pages for the Euler–Maruyama scheme, geometric Brownian motion and
   the linear system.
+- Port of the legacy script `num_exp_GBM.py` (Euler–Maruyama part) as
+  `examples/strong_error_gbm.py`, and a regression test that reproduces the
+  legacy errors from stored reference data.
