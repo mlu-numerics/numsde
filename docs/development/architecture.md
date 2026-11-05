@@ -306,9 +306,8 @@ always correct.
 
 ## API sketch
 
-The names below are a sketch for M1. The part up to `solve` runs as the
-integration test `tests/unit/test_api_sketch.py`; the convergence study
-follows later in M1, until then that part documents intent, not working code.
+The names below were sketched for M1; the whole example now runs as the
+integration test `tests/unit/test_api_sketch.py`.
 
 ```python
 import numsde as ns
@@ -418,7 +417,10 @@ the order are kept apart:
    sizes use the same paths, so the estimates are correlated and the naive
    regression interval is wrong. The confidence interval of the order comes
    from a pathwise bootstrap: resample paths (the same indices for all step
-   sizes), recompute all errors, refit.
+   sizes), recompute all errors, refit. Percentile intervals are the default,
+   BCa intervals an option; see {doc}`../theory/convergence_studies` for the
+   simulated coverage of both. A subset of the step sizes can be excluded from
+   the fit, by default all are used.
 4. *Weak errors.* First the signed difference
    $D_k = \mathbb{E}\,\varphi(X_{h_k}^N) - \mathbb{E}\,\varphi(X(T))$ is
    estimated with its confidence interval; only then is the absolute value
@@ -621,6 +623,10 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-11-03 | The `gpu` nox session fails unless PyTorch can use a CUDA device (otherwise the GPU tests would only be skipped), reuses its environment because the CUDA wheels take several GB, shows the installation output, and accepts `NUMSDE_TORCH_INDEX` for a PyTorch build that matches the local driver |
 | 2026-11-03 | Literature check of the Euler–Maruyama theory page by the maintainer: Kloeden–Platen Theorem 10.2.2 gives the final-time error in $L^1$, the fundamental theorem of Milstein–Tretyakov (2021, Theorem 1.1.1) the final-time error in $L^2$, Mao (2008, Chapter 2, Theorem 7.3) the error uniformly on the grid for $p = 2$, Kloeden–Platen Section 14.1 the weak order; the divergence for superlinear coefficients follows Hutzenthaler–Jentzen–Kloeden (2011). Kanagawa (1988) for $p \ge 2$ stays unchecked and outside `references.bib` |
 | 2026-11-04 | The link check skips Royal Society Publishing (`doi.org/10.1098/`, `royalsocietypublishing.org`), which answers automated requests with 403 Forbidden; such DOIs are checked by hand when they enter `references.bib`. Further sites are added to `linkcheck_ignore` in `docs/conf.py` only for the same reason |
+| 2026-11-05 | `StrongConvergenceStudy`: schemes run on `path.coarsen(k)`; the reference is the exact solution or a scheme on `path.refine(r)`, whose grid must be strictly finer than every grid of the study; errors uniformly on the grid (default) or at the final time, with exponent `p` |
+| 2026-11-05 | `Solver.iterate` yields $(t_n, X_h^n)$ without storing; the study keeps only a running maximum per path, and a scheme reference only at the grid of the finest study step |
+| 2026-11-05 | Order intervals from a pathwise bootstrap (same indices for all step sizes), percentile (default) or BCa; the maintainer first chose BCa, the simulated coverage (BCa never better, clearly worse for skewed errors) led to percentile as default. All step sizes enter the fit by default; `fit_factors` and `refit` exclude some without simulating again |
+| 2026-11-05 | Statistics run on the host in NumPy; `numsde._backend.to_numpy` moves per-path data from any backend and device |
 
 ## References
 
@@ -640,3 +646,6 @@ Literature for the planned schemes, by topic. Entries move into
   Repin and Tretyakov (2002); Milstein and Tretyakov (2021); Leimkuhler and
   Matthews (2013); Hairer, Lubich and Wanner (2006).
 - *Multilevel Monte Carlo:* Giles (2008); Giles and Szpruch (2014).
+- *Bootstrap:* Efron (1987), *J. Amer. Statist. Assoc.* 82(397), 171–185;
+  Efron and Tibshirani (1993), *An Introduction to the Bootstrap*, Chapman &
+  Hall. Both still to be checked.

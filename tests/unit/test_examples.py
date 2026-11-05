@@ -21,12 +21,20 @@ def load(name):
 
 def test_strong_error_gbm_runs_and_prints_a_table(capsys):
     example = load("strong_error_gbm")
-    table = example.main(["--n-paths", "400", "--k-max", "3", "--seed", "1"])
-    np.testing.assert_array_equal(table.n_steps, [10, 20, 40])
-    assert np.all(table.lower <= table.errors)
-    assert np.all(table.errors <= table.upper)
-    assert np.all(np.diff(table.errors) < 0)
-    assert table.eoc.shape == (2,)
+    result = example.main(["--n-paths", "400", "--k-max", "3", "--seed", "1"])
+    np.testing.assert_allclose(result.step_sizes, [1 / 40, 1 / 20, 1 / 10])
+    assert np.all(np.diff(result.errors[0]) > 0)
+    assert result.orders_ci.shape == (1, 2)
     output = capsys.readouterr().out
-    assert "95% conf. interval" in output
-    assert len(output.splitlines()) == 5  # header, rule and three rows
+    assert "Euler–Maruyama (expected order 0.5)" in output
+    assert "fitted order" in output
+
+
+def test_strong_error_gbm_plot(monkeypatch):
+    matplotlib = pytest.importorskip("matplotlib")
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    monkeypatch.setattr(plt, "show", lambda: None)
+    example = load("strong_error_gbm")
+    example.main(["--n-paths", "100", "--k-max", "2", "--plot"])

@@ -1,7 +1,4 @@
-"""The API sketch of the architecture document, as a runnable test.
-
-The convergence-study part of the sketch follows with the analysis module.
-"""
+"""The API sketch of the architecture document, as a runnable test."""
 
 import numpy as np
 
@@ -41,6 +38,29 @@ def test_api_sketch_end_to_end():
     exact = problem.exact_solution(1.0, path.values[-1])
     rms_error = np.sqrt(np.mean((solution.final - exact) ** 2))
     assert rms_error < 0.01  # the EM error for h = 2^-8 is of order 1e-3
+
+
+def test_api_sketch_convergence_study():
+    problem = GeometricBrownianMotion()
+    path = ns.WienerProcess(1).sample_path(
+        ns.uniform_grid(1.0, 2**10), n_paths=5_000, seed=1
+    )
+
+    study = ns.analysis.StrongConvergenceStudy(
+        problem,
+        schemes=[ns.schemes.EulerMaruyama()],
+        path=path,  # finest realization; coarsened per level
+        factors=[2**k for k in range(1, 7)],
+        reference="exact",  # uses problem.exact_solution on the same path
+    )
+    result = study.run()
+    orders = result.orders  # fitted strong order per scheme, with bootstrap CI
+
+    assert orders.shape == (1,)
+    assert result.orders_ci.shape == (1, 2)
+    # The fit gives 0.47 with a narrow interval that just misses 1/2: at these
+    # step sizes the error is not yet fully asymptotic.
+    assert abs(float(orders[0]) - 0.5) < 0.05
 
 
 def test_user_defined_problem_matches_the_benchmark():

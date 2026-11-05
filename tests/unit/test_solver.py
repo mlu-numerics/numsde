@@ -314,3 +314,24 @@ def test_wrapped_reference_path():
     solution = Solver(GeometricBrownianMotion(mu=0.0, sigma=1.0), EulerMaruyama())
     x = solution.solve(path).x[:, 0, 0]
     np.testing.assert_allclose(x, [1.0, 1.2, 1.2 * (1 - 0.3)])
+
+
+# ----------------------------------------------------------------- iterate
+
+
+def test_iterate_yields_the_same_values_as_solve():
+    solver = Solver(LinearSystem(), EulerMaruyama())
+    path = WienerProcess(2).sample_path(uniform_grid(1.0, 6), n_paths=3, seed=4)
+    steps = list(solver.iterate(path))
+    np.testing.assert_array_equal([t for t, _ in steps], path.times)
+    assert all(isinstance(t, float) for t, _ in steps)
+    np.testing.assert_array_equal(np.stack([x for _, x in steps]), solver.solve(path).x)
+
+
+def test_iterate_checks_before_the_first_step():
+    solver = Solver(GeometricBrownianMotion(t0=2.0), EulerMaruyama())
+    path = WienerProcess(1).sample_path([0.0, 1.0], seed=0)
+    with pytest.raises(ValueError, match="initial time"):
+        solver.iterate(path)  # raises without consuming the iterator
+    with pytest.raises(TypeError, match="noise must be a NoiseSource"):
+        solver.iterate([0.0, 1.0])

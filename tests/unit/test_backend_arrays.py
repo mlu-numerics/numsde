@@ -88,3 +88,31 @@ def test_asarray_like_follows_dtype_of_the_reference():
 
     x = np.zeros(2, dtype=np.float32)
     assert asarray_like([1.0, 2.0], x).dtype == np.float32
+
+
+def test_to_numpy_returns_numpy_arrays_unchanged():
+    from numsde._backend import to_numpy
+
+    x = np.ones(3)
+    assert to_numpy(x) is x
+
+
+def test_to_numpy_moves_other_arrays_to_the_host():
+    from numsde._backend import to_numpy
+
+    class DeviceArray:
+        """Minimal array of another library that lives on a device."""
+
+        def __init__(self):
+            self.device = "gpu"
+
+        def to_device(self, device, /, stream=None):
+            self.device = device
+            return self
+
+        def __array__(self, dtype=None, copy=None):
+            return np.array([1.0, 2.0])
+
+    x = DeviceArray()
+    np.testing.assert_array_equal(to_numpy(x), [1.0, 2.0])
+    assert x.device == "cpu"
