@@ -117,8 +117,14 @@ def mean_interval(
     return mean, standard_error, mean - z * standard_error, mean + z * standard_error
 
 
-def _fit_weights(step_sizes: npt.ArrayLike, mask: npt.ArrayLike | None) -> FloatArray:
-    """Return w with slope = w @ log(errors) for the least-squares fit."""
+def _fit_weights(
+    step_sizes: npt.ArrayLike, mask: npt.ArrayLike | None
+) -> tuple[FloatArray, npt.NDArray[np.bool_]]:
+    """Return w with slope = w @ log(errors), and the mask of fitted step sizes.
+
+    A selected step size can have weight zero (the center of a geometric
+    grid), so validity checks use the mask, not the weights.
+    """
     h = np.asarray(step_sizes, dtype=np.float64)
     if h.ndim != 1:
         msg = f"step_sizes must be one-dimensional, got shape {h.shape}."
@@ -137,7 +143,7 @@ def _fit_weights(step_sizes: npt.ArrayLike, mask: npt.ArrayLike | None) -> Float
     weights = np.zeros(h.size)
     centered = x - x.mean()
     weights[use] = centered / np.sum(centered**2)
-    return weights
+    return weights, use
 
 
 def fit_order(
@@ -179,17 +185,18 @@ def fit_order(
     >>> float(fit_order(h, [2 * x**0.5 for x in h]))
     0.5
     """
-    weights = _fit_weights(step_sizes, mask)
+    weights, use = _fit_weights(step_sizes, mask)
     e = np.asarray(errors, dtype=np.float64)
     if e.shape[-1:] != weights.shape:
         msg = f"errors must have {weights.size} step sizes in the last axis."
         raise ValueError(msg)
-    return _slope(weights, e)
+    return _slope(weights, use, e)
 
 
-def _slope(weights: FloatArray, errors: FloatArray) -> FloatArray:
+def _slope(
+    weights: FloatArray, selected: npt.NDArray[np.bool_], errors: FloatArray
+) -> FloatArray:
     """Slope of the fit for errors of shape (..., n_steps); NaN for zero errors."""
-    selected = weights != 0.0
     with np.errstate(divide="ignore", invalid="ignore"):
         log_e = np.log(np.where(selected, errors, 1.0))
         slope = np.asarray(log_e @ weights, dtype=np.float64)
@@ -198,10 +205,13 @@ def _slope(weights: FloatArray, errors: FloatArray) -> FloatArray:
 
 
 def _orders_from_moments(
-    moments: FloatArray, p: float, weights: FloatArray
+    moments: FloatArray,
+    p: float,
+    weights: FloatArray,
+    selected: npt.NDArray[np.bool_],
 ) -> FloatArray:
     """Orders from moments E[Y] of shape (..., n_steps), errors = moments^(1/p)."""
-    return _slope(weights, moments ** (1.0 / p))
+    return _slope(weights, selected, moments ** (1.0 / p))
 
 
 def bootstrap_orders(
@@ -251,7 +261,7 @@ def bootstrap_orders(
     (100,)
     """
     n_bootstrap = positive_int(n_bootstrap, "n_bootstrap")
-    weights = _fit_weights(step_sizes, mask)
+    weights, selected = _fit_weights(step_sizes, mask)
     y = _pathwise(pathwise, weights.size)
     lead, n_paths = y.shape[:-1], y.shape[-1]
     flat = y.reshape(-1, n_paths)
@@ -269,7 +279,7 @@ def bootstrap_orders(
         moments[:, start:stop] = flat @ counts / n_paths
     moments = moments.reshape(*lead, n_bootstrap)
     # Bring the step sizes to the last axis for the fit.
-    return _orders_from_moments(np.moveaxis(moments, -2, -1), p, weights)
+    return _orders_from_moments(np.moveaxis(moments, -2, -1), p, weights, selected)
 
 
 def jackknife_orders(
@@ -307,7 +317,7 @@ def jackknife_orders(
     >>> jackknife_orders(y, h, 2.0).round(6)
     array([0.5, 0.5, 0.5])
     """
-    weights = _fit_weights(step_sizes, mask)
+    weights, selected = _fit_weights(step_sizes, mask)
     y = _pathwise(pathwise, weights.size)
     n = y.shape[-1]
     if n < 2:
@@ -315,7 +325,7 @@ def jackknife_orders(
         raise ValueError(msg)
     total = y.sum(axis=-1, keepdims=True)
     moments = (total - y) / (n - 1)  # (..., n_steps, n_paths)
-    return _orders_from_moments(np.moveaxis(moments, -2, -1), p, weights)
+    return _orders_from_moments(np.moveaxis(moments, -2, -1), p, weights, selected)
 
 
 def _pathwise(pathwise: npt.ArrayLike, n_steps: int) -> FloatArray:
@@ -380,8 +390,8 @@ def bootstrap_interval(
     Returns
     -------
     lower, upper : numpy.ndarray
-        Interval limits, shape ``lead``. They are NaN where the estimate or
-        a replicate is NaN.
+        Interval limits, shape ``lead``. They are NaN where the estimate, a
+        replicate or (for ``"bca"``) a jackknife value is not finite.
 
     Raises
     ------
@@ -425,7 +435,10 @@ def bootstrap_interval(
     upper = np.full(theta.shape, np.nan)
     for index in np.ndindex(theta.shape):
         values = reps[index]
-        if np.isnan(theta[index]) or np.any(np.isnan(values)):
+        if not np.isfinite(theta[index]) or not np.all(np.isfinite(values)):
+            continue
+        if jack is not None and not np.all(np.isfinite(jack[index])):
+            # An undefined jackknife value leaves the acceleration undefined.
             continue
         levels = (alpha / 2, 1 - alpha / 2)
         if jack is not None:

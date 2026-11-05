@@ -282,3 +282,35 @@ def test_interval_rejects_bad_input(kwargs, match):
     args.update(kwargs)
     with pytest.raises(ValueError, match=match):
         bootstrap_interval(**args)
+
+
+# Regression tests for the review of PR #16.
+
+
+def test_selected_zero_error_with_zero_weight_gives_nan():
+    # Finding P3: the center of a geometric grid has weight zero in the fit.
+    h = np.exp([-1.0, 0.0, 1.0])
+    assert np.isnan(fit_order(h, [1.0, 0.0, 4.0]))
+    assert float(fit_order(h, [1.0, 0.0, 4.0], [True, False, True])) == pytest.approx(
+        np.log(2.0)
+    )
+    y = np.array([[1.0, 1.0], [0.0, 0.0], [16.0, 16.0]])
+    assert np.isnan(jackknife_orders(y, h, 2.0)).all()
+    assert np.isnan(bootstrap_orders(y, h, 2.0, n_bootstrap=5, seed=0)).all()
+
+
+def test_bca_interval_is_undefined_for_an_undefined_jackknife():
+    # Finding P4: a NaN jackknife value must not set the acceleration to 0.
+    jack = jackknife_orders([[0.0, 2.0], [1.0, 2.0]], [0.5, 1.0], 2.0)
+    assert np.isnan(jack).any()
+    lower, upper = bootstrap_interval(0.2, [0.1, 0.2, 0.3], jack, method="bca")
+    assert np.isnan(lower)
+    assert np.isnan(upper)
+    # The percentile interval does not use the jackknife.
+    assert np.isfinite(bootstrap_interval(0.2, [0.1, 0.2, 0.3])).all()
+
+
+def test_infinite_replicates_give_an_undefined_interval():
+    lower, upper = bootstrap_interval(0.0, [0.0, np.inf, 1.0])
+    assert np.isnan(lower)
+    assert np.isnan(upper)

@@ -358,10 +358,12 @@ class Solver:
     ) -> Iterator[tuple[float, Any]]:
         """Yield ``(t_n, X_h^n)`` for all grid points; set-up has been done."""
         problem, scheme = self._problem, self._scheme
-        yield float(noise.times[0]), x
-        for step in noise.steps(scheme.requires):
+        times = noise.times
+        yield float(times[0]), x
+        for n, step in enumerate(noise.steps(scheme.requires), start=1):
             x = scheme.step(problem, step.t, x, step, state)
-            yield step.t + step.h, x
+            # The grid point itself: t + h may differ from it by rounding.
+            yield float(times[n]), x
 
     def _run(self, noise: NoiseSource, save: str) -> Solution:
         problem, scheme = self._problem, self._scheme

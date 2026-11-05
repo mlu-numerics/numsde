@@ -17,7 +17,6 @@ a pathwise bootstrap interval. See :doc:`/theory/convergence_studies`.
 from __future__ import annotations
 
 import numbers
-from collections import deque
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
@@ -207,37 +206,49 @@ class StrongConvergenceStudy:
             at the final time) of scheme ``s``, factor ``k`` and path ``i``;
             shape ``(n_schemes, n_factors, n_paths)``.
         """
-        reference, stride = self._reference_values()
+        reference = self._reference_values()
         data = np.empty((len(self._schemes), len(self._factors), self._path.n_paths))
         for s, solver in enumerate(self._solvers):
             for k, factor in enumerate(self._factors):
                 coarse = self._path.coarsen(factor)
-                step = factor // stride if stride else 0
-                data[s, k] = self._pathwise(solver, coarse, reference, step)
+                data[s, k] = self._pathwise(solver, coarse, factor, reference)
         return data
 
-    def _reference_values(self) -> tuple[list[Any] | None, int]:
-        """Return the reference at the grid of the finest factor, and that factor.
+    def _needed_indices(self) -> set[int]:
+        """Return the indices on the grid of `path` at which errors are taken.
 
-        For the exact reference nothing is stored (``None, 0``).
+        These are the points of all coarse grids, which need not be nested,
+        e.g. for the factors 2 and 3; for the final error only the last point.
+        """
+        n_steps = self._path.n_steps
+        if self._error == "final":
+            return {n_steps}
+        return {n for k in self._factors for n in range(0, n_steps + 1, k)}
+
+    def _reference_values(self) -> dict[int, Any] | None:
+        """Return a scheme reference by grid index of `path`; ``None`` if exact.
+
+        The reference runs on `path` refined by the Brownian bridge; its point
+        ``m * reference_refinement`` is the point ``m`` of `path`. Only the
+        points needed by some coarse grid are kept.
         """
         if self._reference is None:
-            return None, 0
-        finest = self._factors[0]
-        fine_path = self._path.refine(self._refinement)
-        keep = finest * self._refinement
+            return None
+        needed = self._needed_indices()
+        r = self._refinement
         solver = Solver(self._problem, self._reference)
-        steps = solver.iterate(fine_path)
-        if self._error == "final":
-            return [deque((x for _, x in steps), maxlen=1)[0]], finest
-        return [x for n, (_, x) in enumerate(steps) if n % keep == 0], finest
+        return {
+            m // r: x
+            for m, (_, x) in enumerate(solver.iterate(self._path.refine(r)))
+            if m % r == 0 and m // r in needed
+        }
 
     def _pathwise(
         self,
         solver: Solver,
         coarse: BrownianPath,
-        reference: list[Any] | None,
-        step: int,
+        factor: int,
+        reference: dict[int, Any] | None,
     ) -> npt.NDArray[np.float64]:
         """Per-path error of one scheme on one coarse path, as a host array."""
         xp = coarse.namespace
@@ -251,7 +262,7 @@ class StrongConvergenceStudy:
                 W = coarse.values[n, ...] - coarse.values[0, ...]
                 exact = problem.exact_solution(t, W)
             else:
-                exact = reference[-1 if self._error == "final" else n * step]
+                exact = reference[n * factor]  # index on the grid of `path`
             diff = x - exact
             err = xp.sum(diff * diff, axis=-1) ** (self._p / 2)
             worst = err if worst is None else xp.maximum(worst, err)

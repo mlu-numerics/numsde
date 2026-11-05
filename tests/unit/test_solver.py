@@ -335,3 +335,12 @@ def test_iterate_checks_before_the_first_step():
         solver.iterate(path)  # raises without consuming the iterator
     with pytest.raises(TypeError, match="noise must be a NoiseSource"):
         solver.iterate([0.0, 1.0])
+
+
+def test_iterate_yields_the_grid_points_exactly():
+    # Review of PR #16, finding P2: t + h may round away from the grid point.
+    solver = Solver(GeometricBrownianMotion(t0=-1.0), EulerMaruyama())
+    path = WienerProcess(1).sample_path([-1.0, 1e-17], seed=0)
+    times = [t for t, _ in solver.iterate(path)]
+    assert times == path.times.tolist() == [-1.0, 1e-17]
+    np.testing.assert_array_equal(times, solver.solve(path).t)

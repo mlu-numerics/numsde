@@ -35,7 +35,8 @@ at the final time. The reference values $X(t_n)$ come from
 
 The maximum over the grid is accumulated during the time loop
 ({meth}`numsde.Solver.iterate`), so no trajectories are stored. Only a scheme
-reference is kept, at the grid points of the finest step size of the study.
+reference is kept, at the points of the coarse grids of the study, which need
+not be nested (factors 2 and 3, say).
 
 ## Error estimates
 

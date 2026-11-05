@@ -349,3 +349,31 @@ def test_study_checks_the_path_against_the_problem_at_once():
     path = WienerProcess(2).sample_path(uniform_grid(1.0, 4), n_paths=3, seed=0)
     with pytest.raises(ValueError, match="noise_dim=1"):
         StrongConvergenceStudy(gbm(), EM, path, [1, 2])
+
+
+# Regression tests for the review of PR #16.
+
+
+@pytest.mark.parametrize(
+    ("refinement", "error"), [(1, "grid"), (2, "grid"), (1, "final")]
+)
+def test_scheme_reference_on_non_nested_grids(refinement, error):
+    # Finding P1: with the factors 2 and 3 on 12 steps the coarse grids are
+    # not nested; the reference must be taken at the same times.
+    problem = GeometricBrownianMotion(mu=1.0, sigma=0.0)
+    path = WienerProcess(1).sample_path(uniform_grid(1.0, 12), n_paths=3, seed=0)
+    study = StrongConvergenceStudy(
+        problem,
+        EM,
+        path,
+        [2, 3],
+        reference=EM,
+        reference_refinement=refinement,
+        error=error,
+    )
+    reference = Solver(problem, EM).solve(path.refine(refinement)).x[::refinement]
+    for row, factor in zip(study.simulate()[0], (2, 3), strict=True):
+        x = Solver(problem, EM).solve(path.coarsen(factor)).x
+        err = np.sum((x - reference[::factor]) ** 2, axis=-1)
+        expected = err.max(axis=0) if error == "grid" else err[-1]
+        np.testing.assert_allclose(row, expected, rtol=1e-12)
