@@ -57,6 +57,16 @@ numpydoc_xref_ignore = {"of", "or", "optional", "default", "array"}
 bibtex_bibfiles = ["references.bib"]
 bibtex_default_style = "alpha"
 
+# -- Link check --------------------------------------------------------------
+# Publisher sites that answer automated requests with "403 Forbidden" although
+# the link works in a browser. The DOIs were checked by hand when the entries
+# were added to references.bib; the nightly link check skips them.
+linkcheck_ignore = [
+    # Royal Society Publishing (DOI prefix 10.1098), e.g. rspa.2010.0348.
+    r"https://doi\.org/10\.1098/",
+    r"https://royalsocietypublishing\.org/",
+]
+
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "numpy": ("https://numpy.org/doc/stable", None),
