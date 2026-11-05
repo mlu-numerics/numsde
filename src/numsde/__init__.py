@@ -14,7 +14,7 @@ The package is at an early stage of development; see the roadmap in the
 developer documentation for the planned scope.
 """
 
-from numsde import benchmarks, schemes
+from numsde import analysis, benchmarks, schemes
 from numsde._backend import (
     RandomNumberGenerator,
     array_namespace,
@@ -52,6 +52,7 @@ __all__ = [
     "StepNoise",
     "WienerProcess",
     "__version__",
+    "analysis",
     "array_namespace",
     "asarray_like",
     "benchmarks",

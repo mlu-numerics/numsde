@@ -16,7 +16,8 @@ uniformly on the grid,
     e_h = \Big(\mathbb{E}\Big[\max_n \big|X_h^n - X(t_n)\big|^2\Big]\Big)^{1/2},
 
 for the step counts :math:`N = 10 \cdot 2^k`, against the exact solution on
-the same Brownian path.
+the same Brownian path, and fits the order of convergence with a bootstrap
+confidence interval.
 
 Unlike the legacy script, which draws new Brownian paths for every step size,
 this version samples one path on the finest grid and coarsens it, so all step
@@ -26,7 +27,7 @@ error; the regression test ``tests/regression/test_legacy_gbm.py`` checks
 that the library reproduces the legacy numbers exactly when it is given the
 legacy paths.
 
-Run with the parameters of the book (50 000 paths, about 3 GB of memory)::
+Run with the parameters of the book (50 000 paths)::
 
     python examples/strong_error_gbm.py
 
@@ -38,56 +39,17 @@ or smaller, with a log-log plot (needs ``numsde[plot]``)::
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
-from statistics import NormalDist
-
-import numpy as np
 
 import numsde as ns
 
 
-@dataclass(frozen=True)
-class ErrorTable:
-    """Estimated strong errors with 95 % confidence intervals."""
-
-    n_steps: np.ndarray
-    step_sizes: np.ndarray
-    errors: np.ndarray
-    lower: np.ndarray
-    upper: np.ndarray
-
-    @property
-    def eoc(self) -> np.ndarray:
-        """Experimental orders of convergence between consecutive step sizes."""
-        return np.diff(np.log(self.errors)) / np.diff(np.log(self.step_sizes))
-
-    def format(self) -> str:
-        """Return the table as text, in the layout of the legacy output."""
-        lines = [
-            f"{'N':>6} {'h':>10} {'error':>10} {'EOC':>6}   95% conf. interval",
-            "-" * 62,
-        ]
-        eoc = [float("nan"), *self.eoc]
-        for row in zip(
-            self.n_steps,
-            self.step_sizes,
-            self.errors,
-            eoc,
-            self.lower,
-            self.upper,
-            strict=True,
-        ):
-            n, h, e, order, lo, up = row
-            order_text = "" if np.isnan(order) else f"{order:6.2f}"
-            lines.append(
-                f"{n:6d} {h:10.6f} {e:10.6f} {order_text:>6}   [{lo:.6f}, {up:.6f}]"
-            )
-        return "\n".join(lines)
-
-
 def strong_errors(
-    n_paths: int = 50_000, k_max: int = 8, seed: int = 20250718
-) -> ErrorTable:
+    n_paths: int = 50_000,
+    k_max: int = 8,
+    seed: int = 20250718,
+    *,
+    n_bootstrap: int = 1000,
+) -> ns.analysis.StrongConvergenceResult:
     """Estimate the strong error of Euler–Maruyama for ``N = 10 * 2**k``.
 
     Parameters
@@ -97,57 +59,30 @@ def strong_errors(
     k_max
         Number of step sizes; ``k = 0, ..., k_max - 1``.
     seed
-        Seed of the Brownian path.
+        Seed of the Brownian path and of the bootstrap.
+    n_bootstrap
+        Number of bootstrap replicates for the interval of the order.
 
     Returns
     -------
-    ErrorTable
-        Errors and confidence intervals, finest step size last.
+    numsde.analysis.StrongConvergenceResult
+        Errors, confidence intervals and the fitted order, finest step first.
     """
     problem = ns.benchmarks.GeometricBrownianMotion(mu=0.25, sigma=1.0, x0=1.0)
-    solver = ns.Solver(problem, ns.schemes.EulerMaruyama())
-    n_list = np.array([10 * 2**k for k in range(k_max)])
-    finest = ns.WienerProcess(1).sample_path(
-        ns.uniform_grid(1.0, int(n_list[-1])), n_paths=n_paths, seed=seed
+    n_finest = 10 * 2 ** (k_max - 1)
+    path = ns.WienerProcess(1).sample_path(
+        ns.uniform_grid(1.0, n_finest), n_paths=n_paths, seed=seed
     )
-    z = NormalDist().inv_cdf(0.975)
-
-    errors, lower, upper = [], [], []
-    for n in n_list:
-        path = finest.coarsen(int(n_list[-1] // n))
-        x = solver.solve(path).x
-        exact = problem.exact_solution(path.times[:, None, None], path.values)
-        # Pathwise maximum over the grid of the squared error.
-        y = np.max(np.sum((x - exact) ** 2, axis=-1), axis=0)
-        mean, half = y.mean(), z * y.std(ddof=1) / np.sqrt(n_paths)
-        errors.append(np.sqrt(mean))
-        lower.append(np.sqrt(max(mean - half, 0.0)))
-        upper.append(np.sqrt(mean + half))
-    return ErrorTable(n_list, 1.0 / n_list, *map(np.array, (errors, lower, upper)))
-
-
-def plot(table: ErrorTable) -> None:
-    """Show the errors in a log-log plot with an order line 1/2."""
-    import matplotlib.pyplot as plt
-
-    _, ax = plt.subplots()
-    ax.errorbar(
-        table.n_steps,
-        table.errors,
-        yerr=[table.errors - table.lower, table.upper - table.errors],
-        ls="none",
-        marker="o",
-        label="Euler–Maruyama",
+    study = ns.analysis.StrongConvergenceStudy(
+        problem,
+        ns.schemes.EulerMaruyama(),
+        path,
+        factors=[2**k for k in range(k_max)],  # N = n_finest / factor
     )
-    reference = table.errors[0] * (table.n_steps / table.n_steps[0]) ** -0.5
-    ax.loglog(table.n_steps, 0.9 * reference, ":", color="gray", label="order 1/2")
-    ax.set_xlabel("number of time steps $N$")
-    ax.set_ylabel("root-mean-square error, max over the grid")
-    ax.legend()
-    plt.show()
+    return study.run(n_bootstrap=n_bootstrap, seed=seed)
 
 
-def main(argv: list[str] | None = None) -> ErrorTable:
+def main(argv: list[str] | None = None) -> ns.analysis.StrongConvergenceResult:
     """Run the experiment from the command line and print the table."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--n-paths", type=int, default=50_000)
@@ -155,11 +90,14 @@ def main(argv: list[str] | None = None) -> ErrorTable:
     parser.add_argument("--seed", type=int, default=20250718)
     parser.add_argument("--plot", action="store_true")
     args = parser.parse_args(argv)
-    table = strong_errors(args.n_paths, args.k_max, args.seed)
-    print(table.format())
+    result = strong_errors(args.n_paths, args.k_max, args.seed)
+    print(result)
     if args.plot:
-        plot(table)
-    return table
+        import matplotlib.pyplot as plt
+
+        result.plot()
+        plt.show()
+    return result
 
 
 if __name__ == "__main__":

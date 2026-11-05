@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
@@ -20,6 +21,7 @@ from numsde.schemes.base import Scheme
 from numsde.solution import Solution
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from types import ModuleType
 
     from numsde._backend import SeedLike
@@ -180,6 +182,51 @@ class Solver:
         self._check_compatibility(noise)
         return self._run(noise, save)
 
+    def iterate(self, noise: NoiseSource) -> Iterator[tuple[float, Any]]:
+        r"""Advance the batch step by step, yielding the values on the grid.
+
+        Unlike :meth:`solve`, nothing is stored: the caller sees
+        :math:`(t_n, X_h^n)` for :math:`n = 0, \dots, N` one after the other
+        and keeps what it needs, for example a running maximum of the error.
+        All checks of :meth:`solve` run when this method is called, before the
+        first value is produced.
+
+        Parameters
+        ----------
+        noise
+            Noise source; the same requirements as for :meth:`solve` apply.
+
+        Returns
+        -------
+        iterator of (float, array)
+            The grid point :math:`t_n` and the values :math:`X_h^n` of shape
+            ``(n_paths, dim)``, starting with the initial value. The arrays
+            are not modified afterwards, but they are not read-only.
+
+        Raises
+        ------
+        TypeError
+            If `noise` is not a noise source.
+        ValueError
+            If the noise does not match the problem, the source cannot provide
+            the required step quantities, or a coefficient returns an array of
+            the wrong shape.
+
+        Examples
+        --------
+        >>> import numsde as ns
+        >>> solver = ns.Solver(
+        ...     ns.benchmarks.GeometricBrownianMotion(), ns.schemes.EulerMaruyama()
+        ... )
+        >>> path = ns.WienerProcess(1).sample_path([0.0, 0.5, 1.0], n_paths=2, seed=0)
+        >>> [t for t, x in solver.iterate(path)]
+        [0.0, 0.5, 1.0]
+        """
+        self._check_no_sampling_options(noise, None, None, None, None, None, None)
+        self._check_compatibility(noise)
+        x, state = self._start(noise)
+        return self._loop(noise, x, state)
+
     # ------------------------------------------------------------- set-up
 
     def _sample_noise(
@@ -296,26 +343,39 @@ class Solver:
 
     # ------------------------------------------------------------ time loop
 
-    def _run(self, noise: NoiseSource, save: str) -> Solution:
+    def _start(self, noise: NoiseSource) -> tuple[Any, Any]:
+        """Check the step quantities and coefficients; return x0 and the state."""
         problem, scheme = self._problem, self._scheme
         noise.check_requires(scheme.requires)
-        structure = resolve_structure(problem.structure, problem.dim, problem.noise_dim)
-        xp = noise.namespace
         x = problem.initial_value(
-            noise.n_paths, xp=xp, dtype=noise.dtype, device=noise.device
+            noise.n_paths, xp=noise.namespace, dtype=noise.dtype, device=noise.device
         )
         self._check_coefficients(x)
-        state = scheme.init_state(problem, x)
+        return x, scheme.init_state(problem, x)
 
-        saved = [x]
-        for step in noise.steps(scheme.requires):
+    def _loop(
+        self, noise: NoiseSource, x: Any, state: Any
+    ) -> Iterator[tuple[float, Any]]:
+        """Yield ``(t_n, X_h^n)`` for all grid points; set-up has been done."""
+        problem, scheme = self._problem, self._scheme
+        times = noise.times
+        yield float(times[0]), x
+        for n, step in enumerate(noise.steps(scheme.requires), start=1):
             x = scheme.step(problem, step.t, x, step, state)
-            if save == "all":
-                saved.append(x)
+            # The grid point itself: t + h may differ from it by rounding.
+            yield float(times[n]), x
+
+    def _run(self, noise: NoiseSource, save: str) -> Solution:
+        problem, scheme = self._problem, self._scheme
+        structure = resolve_structure(problem.structure, problem.dim, problem.noise_dim)
+        xp = noise.namespace
+        x, state = self._start(noise)
+        values = (x for _, x in self._loop(noise, x, state))
         if save == "final":
-            saved = [x]
+            saved = list(deque(values, maxlen=1))
             t = noise.times[-1:]
         else:
+            saved = list(values)
             t = noise.times
         metadata = {
             "scheme": scheme.name,

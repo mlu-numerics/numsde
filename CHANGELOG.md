@@ -49,6 +49,16 @@ entries here only refer to their errata ID.
 - `asarray_like` to convert problem parameters to the backend of the state.
 - Theory pages for the Euler–Maruyama scheme, geometric Brownian motion and
   the linear system.
+- `numsde.analysis.StrongConvergenceStudy` and `StrongConvergenceResult`:
+  strong errors uniformly on the grid or at the final time against the exact
+  solution or a scheme on a refined path, confidence intervals of the errors,
+  fitted orders with percentile or BCa bootstrap intervals, `refit` with a
+  subset of the step sizes, text table and `plot()`.
+- `numsde.analysis.statistics`: mean intervals, order fit, pathwise bootstrap
+  and jackknife, percentile and BCa intervals.
+- `Solver.iterate`, which yields the values on the grid one step at a time.
+- Theory page on convergence studies, with the simulated coverage of the
+  bootstrap intervals.
 - Port of the legacy script `num_exp_GBM.py` (Euler–Maruyama part) as
   `examples/strong_error_gbm.py`, and a regression test that reproduces the
   legacy errors from stored reference data.

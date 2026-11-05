@@ -14,6 +14,7 @@ from numsde._backend.arrays import (
     device_of,
     is_real_floating,
     owned_read_only,
+    to_numpy,
 )
 from numsde._backend.namespace import (
     SUPPORTED_BACKENDS,
@@ -42,4 +43,5 @@ __all__ = [
     "is_real_floating",
     "namespace_for",
     "owned_read_only",
+    "to_numpy",
 ]

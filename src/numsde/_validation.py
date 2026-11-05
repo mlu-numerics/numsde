@@ -11,9 +11,40 @@ import math
 import numbers
 from typing import TypeVar
 
-__all__ = ["finite_float", "instance_of", "positive_int"]
+__all__ = ["check_instance", "finite_float", "instance_of", "positive_int"]
 
 T = TypeVar("T")
+
+
+def check_instance(value: object, cls: type, name: str) -> None:
+    """Raise :class:`TypeError` unless `value` is an instance of `cls`.
+
+    Unlike :func:`instance_of`, this also accepts abstract classes for `cls`
+    under static type checking.
+
+    Parameters
+    ----------
+    value
+        Candidate value.
+    cls
+        Required type.
+    name
+        Parameter name used in error messages.
+
+    Raises
+    ------
+    TypeError
+        If `value` is not an instance of `cls`.
+
+    Examples
+    --------
+    >>> check_instance(2.0, float, "t")
+    """
+    if not isinstance(value, cls):
+        msg = (
+            f"{name} must be an instance of {cls.__name__}, got {type(value).__name__}."
+        )
+        raise TypeError(msg)
 
 
 def instance_of(value: object, cls: type[T], name: str) -> T:
