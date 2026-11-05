@@ -90,16 +90,24 @@ BCa (bias-corrected and accelerated, `method="bca"`)
   The jackknife values are cheap here: the leave-one-out means are
   $(n \bar Y_k - Y_{ik})/(n-1)$.
 
-Both methods are described by Efron (1987) and Efron and Tibshirani (1993) †.
-On identical replicates they agree with `scipy.stats.bootstrap` to rounding
-error.
+Both intervals follow {cite}`EfronTibshirani1986`: the percentile interval is
+their (7.2), the BCa interval their (7.15) with $\hat z_0$ from (7.8), the
+bootstrap distribution $\hat G(s) = \mathrm{Prob}_*\{\hat\theta^* < s\}$ of
+(7.1) (replicates equal to the estimate count one half here), and the
+acceleration (8.5). In (8.5) the empirical influence values $U_i^0$ are
+replaced by the jackknife values $U_i = (n-1)(\hat q_{(\cdot)} - \hat q_{(i)})$
+of their (10.8), which the paper describes as the case
+$\varepsilon = -1/(n-1)$ of the definition of $U_i^0$ (p. 74); the factor
+$n - 1$ cancels in (8.5). On identical replicates both intervals agree with
+`scipy.stats.bootstrap` to rounding error.
 
 ### How well do the intervals cover?
 
-In theory, BCa intervals are second-order accurate and percentile intervals
-first-order accurate. For the fitted order of a convergence study, simulations
-show something else. The table gives the fraction of 95 % intervals that
-contain the true order:
+In the parametric theory of {cite}`EfronTibshirani1986`, Table 6, each of the
+two methods is exactly correct under certain assumptions, and the BCa interval
+under more general ones than the percentile interval. For the fitted order of
+a convergence study, simulations show something else. The table gives the
+fraction of 95 % intervals that contain the true order:
 
 | Data | BCa | Percentile |
 | --- | --- | --- |
@@ -137,9 +145,4 @@ $\hat q = 0.468$ with the interval $[0.461, 0.474]$.
 
 ## References
 
-Efron, B. (1987). Better bootstrap confidence intervals. *J. Amer. Statist.
-Assoc.* 82(397), 171–185 †. Efron, B. and Tibshirani, R. J. (1993). *An
-Introduction to the Bootstrap.* Chapman & Hall, New York †.
-
-† Details not yet checked against the publisher; the entries move to the
-bibliography once they are.
+{cite}`EfronTibshirani1986`

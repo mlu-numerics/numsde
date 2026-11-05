@@ -370,7 +370,9 @@ def bootstrap_interval(
         {6 \big(\sum_i (\hat\theta_{(\cdot)} - \hat\theta_{(i)})^2\big)^{3/2}}.
 
     The proportion in :math:`\hat z_0` is clipped to
-    :math:`[1/(2B), 1 - 1/(2B)]`, so that :math:`\hat z_0` stays finite.
+    :math:`[1/(2B), 1 - 1/(2B)]`, so that :math:`\hat z_0` stays finite. Both
+    intervals follow Efron and Tibshirani (1986), equations (7.2) and (7.15),
+    with the jackknife form of the acceleration (8.5).
 
     Parameters
     ----------

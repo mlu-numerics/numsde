@@ -418,7 +418,7 @@ the order are kept apart:
    regression interval is wrong. The confidence interval of the order comes
    from a pathwise bootstrap: resample paths (the same indices for all step
    sizes), recompute all errors, refit. Percentile intervals are the default,
-   BCa intervals an option; see {doc}`../theory/convergence_studies` for the
+   BCa intervals an option {cite}`EfronTibshirani1986`; see {doc}`../theory/convergence_studies` for the
    simulated coverage of both. A subset of the step sizes can be excluded from
    the fit, by default all are used.
 4. *Weak errors.* First the signed difference
@@ -627,6 +627,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-11-05 | `Solver.iterate` yields $(t_n, X_h^n)$ without storing; the study keeps only a running maximum per path, and a scheme reference only at the points of the coarse grids (which need not be nested), indexed by the grid of the path |
 | 2026-11-05 | Order intervals from a pathwise bootstrap (same indices for all step sizes), percentile (default) or BCa; the maintainer first chose BCa, the simulated coverage (BCa never better, clearly worse for skewed errors) led to percentile as default. All step sizes enter the fit by default; `fit_factors` and `refit` exclude some without simulating again |
 | 2026-11-05 | Statistics run on the host in NumPy; `numsde._backend.to_numpy` moves per-path data from any backend and device |
+| 2026-11-05 | Reference for the bootstrap intervals: Efron and Tibshirani (1986), (7.2) percentile, (7.15) BCa, (8.5) acceleration in its jackknife form (10.8); checked against the article provided by the maintainer. It replaces the unchecked citations of Efron (1987) and Efron and Tibshirani (1993) |
 
 ## References
 
@@ -646,6 +647,4 @@ Literature for the planned schemes, by topic. Entries move into
   Repin and Tretyakov (2002); Milstein and Tretyakov (2021); Leimkuhler and
   Matthews (2013); Hairer, Lubich and Wanner (2006).
 - *Multilevel Monte Carlo:* Giles (2008); Giles and Szpruch (2014).
-- *Bootstrap:* Efron (1987), *J. Amer. Statist. Assoc.* 82(397), 171–185;
-  Efron and Tibshirani (1993), *An Introduction to the Bootstrap*, Chapman &
-  Hall. Both still to be checked.
+- *Bootstrap:* Efron and Tibshirani (1986).
