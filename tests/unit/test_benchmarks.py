@@ -4,6 +4,7 @@ import pytest
 from numsde import ItoSDE, NoiseStructure
 from numsde.benchmarks import (
     PROBLEMS,
+    BrownianMotionOnCircle,
     GeometricBrownianMotion,
     LinearSystem,
     get_problem,
@@ -25,6 +26,7 @@ def test_registry_contains_the_m1_problems():
     assert dict(PROBLEMS) == {
         "geometric_brownian_motion": GeometricBrownianMotion,
         "linear_system": LinearSystem,
+        "brownian_motion_on_circle": BrownianMotionOnCircle,
     }
     for cls in PROBLEMS.values():
         assert issubclass(cls, ItoSDE)
@@ -148,3 +150,84 @@ def test_linear_system_accepts_an_array_initial_value():
 def test_linear_system_rejects_bad_parameters(kwargs, error, match):
     with pytest.raises(error, match=match):
         LinearSystem(**kwargs)
+
+
+# ---------------------------------------------------- Brownian motion on a circle
+
+J = np.array([[0.0, -1.0], [1.0, 0.0]])
+
+
+def test_circle_coefficients_and_structure():
+    problem = BrownianMotionOnCircle(sigma=2.0)
+    x = np.array([[1.0, 2.0], [-0.5, 0.25]])
+    np.testing.assert_allclose(problem.drift(0.0, x), -2.0 * x)
+    g = problem.diffusion(0.0, x)
+    assert g.shape == (2, 2, 1)
+    np.testing.assert_allclose(g[..., 0], 2.0 * x @ J.T)
+    assert (problem.dim, problem.noise_dim) == (2, 1)
+    assert problem.structure.verified == {"scalar", "commutative"}
+    assert not problem.structure.additive
+    assert repr(problem) == "BrownianMotionOnCircle(sigma=2.0, x0=(1.0, 0.0), t0=0.0)"
+
+
+def test_circle_exact_solution_is_a_rotation():
+    problem = BrownianMotionOnCircle(sigma=1.5, x0=(0.6, 0.8))
+    W = np.array([[0.3], [-1.1], [2.0]])
+    X = problem.exact_solution(0.7, W)
+    assert X.shape == (3, 2)
+    angle = 1.5 * W[:, 0]
+    expected = np.stack(
+        [
+            np.cos(angle) * 0.6 - np.sin(angle) * 0.8,
+            np.sin(angle) * 0.6 + np.cos(angle) * 0.8,
+        ],
+        axis=-1,
+    )
+    np.testing.assert_allclose(X, expected)
+    np.testing.assert_allclose(np.linalg.norm(X, axis=-1), problem.radius)
+    assert problem.radius == pytest.approx(1.0)
+
+
+def test_circle_exact_solution_equals_the_commuting_matrix_formula():
+    # A = -sigma^2/2 I and B = sigma J commute, so
+    # X(t) = exp((A - B^2/2)(t - t0) + B W) x0 with B^2 = -sigma^2 I.
+    sigma, t0, t, W = 0.8, 0.5, 1.7, 0.9
+    problem = BrownianMotionOnCircle(sigma=sigma, x0=(2.0, -1.0), t0=t0)
+    A, B = -0.5 * sigma**2 * np.eye(2), sigma * J
+    M = (A - 0.5 * B @ B) * (t - t0) + B * W
+    np.testing.assert_allclose(
+        problem.exact_solution(t, np.array([W])),
+        matrix_exponential(M) @ problem.x0,
+        rtol=1e-13,
+    )
+
+
+def test_circle_exact_solution_broadcasts_over_times_and_paths():
+    problem = BrownianMotionOnCircle()
+    t = np.array([0.0, 1.0])[:, None, None]
+    W = np.zeros((2, 4, 1))
+    X = problem.exact_solution(t, W)
+    assert X.shape == (2, 4, 2)
+    np.testing.assert_allclose(X, np.broadcast_to([1.0, 0.0], (2, 4, 2)))
+
+
+def test_circle_accepts_an_array_initial_value():
+    problem = BrownianMotionOnCircle(x0=np.array([0.0, 3.0], dtype=np.float32))
+    assert problem.x0_is_array
+    assert problem.radius == 3.0
+    X = problem.exact_solution(0.0, np.zeros((1, 1), dtype=np.float32))
+    assert X.dtype == np.float32
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "error", "match"),
+    [
+        ({"sigma": np.inf}, ValueError, "sigma"),
+        ({"sigma": "1"}, TypeError, "sigma"),
+        ({"x0": (1.0, 0.0, 0.0)}, ValueError, r"shape \(2,\)"),
+        ({"x0": "ab"}, TypeError, "x0 must be"),
+    ],
+)
+def test_circle_rejects_bad_parameters(kwargs, error, match):
+    with pytest.raises(error, match=match):
+        BrownianMotionOnCircle(**kwargs)

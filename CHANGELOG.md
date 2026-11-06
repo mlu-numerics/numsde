@@ -46,6 +46,8 @@ entries here only refer to their errata ID.
   of scheme, noise and coefficient shapes before the loop, `save="final"`.
 - Benchmark problems `GeometricBrownianMotion` and `LinearSystem` with exact
   solutions, and the registry `numsde.benchmarks.PROBLEMS`.
+- Benchmark problem `BrownianMotionOnCircle`, with exact solution and the
+  invariant radius that Euler–Maruyama does not preserve.
 - `asarray_like` to convert problem parameters to the backend of the state.
 - Theory pages for the Euler–Maruyama scheme, geometric Brownian motion and
   the linear system.

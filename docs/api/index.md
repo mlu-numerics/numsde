@@ -72,6 +72,7 @@ This reference is generated from the docstrings in the source code.
 
    GeometricBrownianMotion
    LinearSystem
+   BrownianMotionOnCircle
    get_problem
    PROBLEMS
 ```
