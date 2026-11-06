@@ -621,6 +621,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-11-03 | The `gpu` nox session fails unless PyTorch can use a CUDA device (otherwise the GPU tests would only be skipped), reuses its environment because the CUDA wheels take several GB, shows the installation output, and accepts `NUMSDE_TORCH_INDEX` for a PyTorch build that matches the local driver |
 | 2026-11-03 | Literature check of the Euler–Maruyama theory page by the maintainer: Kloeden–Platen Theorem 10.2.2 gives the final-time error in $L^1$, the fundamental theorem of Milstein–Tretyakov (2021, Theorem 1.1.1) the final-time error in $L^2$, Mao (2008, Chapter 2, Theorem 7.3) the error uniformly on the grid for $p = 2$, Kloeden–Platen Section 14.1 the weak order; the divergence for superlinear coefficients follows Hutzenthaler–Jentzen–Kloeden (2011). Kanagawa (1988) for $p \ge 2$ stays unchecked and outside `references.bib` |
 | 2026-11-04 | The link check skips Royal Society Publishing (`doi.org/10.1098/`, `royalsocietypublishing.org`), which answers automated requests with 403 Forbidden; such DOIs are checked by hand when they enter `references.bib`. Further sites are added to `linkcheck_ignore` in `docs/conf.py` only for the same reason |
+| 2026-11-06 | Third M1 test problem `BrownianMotionOnCircle`: dX = -σ²/2 X dt + σ J X dW in the plane with scalar noise; exact solution a rotation of x0 by σ(W(t) - W(t0)); the radius is invariant, and Euler–Maruyama drifts outwards in the mean square, E\|X_h^N\|² = \|x0\|²(1 + σ⁴h²/4)^N, which the tests check exactly |
 
 ## References
 

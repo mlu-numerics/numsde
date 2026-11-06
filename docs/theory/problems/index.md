@@ -27,12 +27,12 @@ Purpose
 References
 : Origin of the problem in the literature, and a link to the registry entry.
 
-Pages are added together with the problems. Brownian motion on the circle,
-the third problem of milestone M1, follows with the convergence study.
+Pages are added together with the problems.
 
 ```{toctree}
 :maxdepth: 1
 
 geometric_brownian_motion
 linear_system
+brownian_motion_on_circle
 ```

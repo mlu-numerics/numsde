@@ -10,19 +10,30 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final
 
-from numsde.benchmarks.problems import GeometricBrownianMotion, LinearSystem
+from numsde.benchmarks.problems import (
+    BrownianMotionOnCircle,
+    GeometricBrownianMotion,
+    LinearSystem,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from numsde.problems.base import ItoSDE
 
-__all__ = ["PROBLEMS", "GeometricBrownianMotion", "LinearSystem", "get_problem"]
+__all__ = [
+    "PROBLEMS",
+    "BrownianMotionOnCircle",
+    "GeometricBrownianMotion",
+    "LinearSystem",
+    "get_problem",
+]
 
 PROBLEMS: Final[Mapping[str, type[ItoSDE]]] = MappingProxyType(
     {
         "geometric_brownian_motion": GeometricBrownianMotion,
         "linear_system": LinearSystem,
+        "brownian_motion_on_circle": BrownianMotionOnCircle,
     }
 )
 """Registry of benchmark problems by name (read-only)."""

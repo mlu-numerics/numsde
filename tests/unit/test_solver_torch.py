@@ -4,7 +4,11 @@ import numpy as np
 import pytest
 
 from numsde import Solver, WienerProcess
-from numsde.benchmarks import GeometricBrownianMotion, LinearSystem
+from numsde.benchmarks import (
+    BrownianMotionOnCircle,
+    GeometricBrownianMotion,
+    LinearSystem,
+)
 from numsde.schemes import EulerMaruyama
 from numsde.stepping import uniform_grid
 
@@ -12,7 +16,9 @@ torch = pytest.importorskip("torch")
 
 
 @pytest.mark.parametrize(
-    "problem", [GeometricBrownianMotion(), LinearSystem()], ids=["gbm", "linear"]
+    "problem",
+    [GeometricBrownianMotion(), LinearSystem(), BrownianMotionOnCircle()],
+    ids=["gbm", "linear", "circle"],
 )
 def test_torch_solution_equals_numpy_solution(problem):
     grid = uniform_grid(1.0, 16)
@@ -79,3 +85,13 @@ def test_sampling_rejects_numpy_for_a_tensor_initial_value():
     solver = Solver(problem, EulerMaruyama())
     with pytest.raises(ValueError, match="different array libraries"):
         solver.solve(times=[0.0, 1.0], seed=0, backend="numpy")
+
+
+def test_torch_circle_exact_solution_equals_numpy():
+    problem = BrownianMotionOnCircle(sigma=1.3, x0=(0.6, 0.8))
+    W = np.array([[0.2], [-1.4]])
+    np.testing.assert_allclose(
+        problem.exact_solution(0.0, torch.asarray(W)).numpy(),
+        problem.exact_solution(0.0, W),
+        rtol=1e-14,
+    )

@@ -6,7 +6,7 @@ from hypothesis import strategies as st
 
 import numsde as ns
 from numsde import ItoSDE, NoiseStructure, Solver, WienerProcess
-from numsde.benchmarks import LinearSystem
+from numsde.benchmarks import BrownianMotionOnCircle, LinearSystem
 from numsde.schemes import EulerMaruyama
 
 seeds = st.integers(min_value=0, max_value=2**32 - 1)
@@ -103,3 +103,24 @@ def test_coarsened_paths_drive_coarse_solutions(n_steps, factor, seed):
     np.testing.assert_allclose(
         solver.solve(coarse).x, solver.solve(rebuilt).x, rtol=1e-12, atol=1e-12
     )
+
+
+@given(
+    grid=grids(),
+    sigma=st.floats(0.1, 3.0),
+    angle=st.floats(0.0, 2 * np.pi),
+    seed=seeds,
+)
+def test_euler_maruyama_leaves_the_circle_by_a_known_factor(grid, sigma, angle, seed):
+    """On the circle, |X_h^{n+1}|^2 = |X_h^n|^2 ((1 - s h/2)^2 + s dW_n^2).
+
+    Here s = sigma^2: Euler-Maruyama leaves the circle on every path.
+    """
+    problem = BrownianMotionOnCircle(sigma=sigma, x0=(np.cos(angle), np.sin(angle)))
+    path = WienerProcess(1).sample_path(grid, n_paths=3, seed=seed)
+    x = Solver(problem, EulerMaruyama()).solve(path).x
+    radius2 = np.sum(x**2, axis=-1)
+    s = sigma**2
+    h = np.diff(grid)[:, None]
+    factor = (1 - s * h / 2) ** 2 + s * path.increments[..., 0] ** 2
+    np.testing.assert_allclose(radius2[1:], radius2[:-1] * factor, rtol=1e-10)
