@@ -4,7 +4,11 @@ import numpy as np
 import pytest
 
 from numsde import Solver, WienerProcess
-from numsde.benchmarks import GeometricBrownianMotion, LinearSystem
+from numsde.benchmarks import (
+    BrownianMotionOnCircle,
+    GeometricBrownianMotion,
+    LinearSystem,
+)
 from numsde.schemes import EulerMaruyama
 from numsde.stepping import uniform_grid
 
@@ -12,7 +16,9 @@ torch = pytest.importorskip("torch")
 
 
 @pytest.mark.parametrize(
-    "problem", [GeometricBrownianMotion(), LinearSystem()], ids=["gbm", "linear"]
+    "problem",
+    [GeometricBrownianMotion(), LinearSystem(), BrownianMotionOnCircle()],
+    ids=["gbm", "linear", "circle"],
 )
 def test_torch_solution_equals_numpy_solution(problem):
     grid = uniform_grid(1.0, 16)
@@ -121,3 +127,13 @@ def test_convergence_study_on_cuda():
     on_cuda = StrongConvergenceStudy(problem, EulerMaruyama(), path, [1, 2, 4])
     on_numpy = StrongConvergenceStudy(problem, EulerMaruyama(), ref, [1, 2, 4])
     np.testing.assert_allclose(on_cuda.simulate(), on_numpy.simulate(), rtol=1e-12)
+
+
+def test_torch_circle_exact_solution_equals_numpy():
+    problem = BrownianMotionOnCircle(sigma=1.3, x0=(0.6, 0.8))
+    W = np.array([[0.2], [-1.4]])
+    np.testing.assert_allclose(
+        problem.exact_solution(0.0, torch.asarray(W)).numpy(),
+        problem.exact_solution(0.0, W),
+        rtol=1e-14,
+    )

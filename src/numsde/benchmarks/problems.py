@@ -5,6 +5,7 @@ Every problem has a theory page under :doc:`/theory/problems/index`.
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING, Any
 
 import array_api_compat
@@ -19,7 +20,7 @@ from numsde.schemes.base import matvec
 if TYPE_CHECKING:
     import numpy.typing as npt
 
-__all__ = ["GeometricBrownianMotion", "LinearSystem"]
+__all__ = ["BrownianMotionOnCircle", "GeometricBrownianMotion", "LinearSystem"]
 
 
 def _matrix(value: Any, shape: tuple[int, ...], name: str) -> npt.NDArray[np.float64]:
@@ -237,3 +238,103 @@ class LinearSystem(ItoSDE):
         y0 = matvec(asarray_like(self._Q_inv, W), asarray_like(self.x0, W))
         exponent = (t - self.t0) * c + matvec(asarray_like(b, W), W)
         return matvec(asarray_like(self.eigenvectors, W), xp.exp(exponent) * y0)
+
+
+class BrownianMotionOnCircle(ItoSDE):
+    r"""Brownian motion on a circle around the origin.
+
+    The two-dimensional SDE with scalar noise
+
+    .. math::
+
+        \mathrm{d}X(t) = -\tfrac12 \sigma^2 X(t)\,\mathrm{d}t
+        + \sigma J X(t)\,\mathrm{d}W(t),
+        \qquad J = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix},
+
+    has the exact solution
+
+    .. math::
+
+        X(t) = R\big(\sigma (W(t) - W(t_0))\big)\, x_0, \qquad
+        R(\varphi) = \begin{pmatrix} \cos\varphi & -\sin\varphi \\
+        \sin\varphi & \cos\varphi \end{pmatrix},
+
+    a rotation of :math:`x_0` by the random angle
+    :math:`\sigma (W(t) - W(t_0))`. It stays on the circle of radius
+    :math:`|x_0|`; schemes in general do not. See
+    :doc:`/theory/problems/brownian_motion_on_circle`.
+
+    Parameters
+    ----------
+    sigma
+        Angular diffusion :math:`\sigma`.
+    x0
+        Initial value :math:`x_0 \in \mathbb{R}^2`.
+    t0
+        Initial time :math:`t_0`.
+
+    Raises
+    ------
+    TypeError
+        If a parameter has the wrong type.
+    ValueError
+        If a parameter is not finite or `x0` does not have shape ``(2,)``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> problem = BrownianMotionOnCircle()
+    >>> problem.exact_solution(1.0, np.array([np.pi / 2])).round(12)
+    array([0., 1.])
+    >>> problem.radius
+    1.0
+    """
+
+    structure = NoiseStructure(scalar=True)
+
+    def __init__(
+        self,
+        sigma: float = 1.0,
+        x0: Any = (1.0, 0.0),
+        *,
+        t0: float = 0.0,
+    ) -> None:
+        super().__init__(
+            dim=2,
+            noise_dim=1,
+            x0=x0 if array_api_compat.is_array_api_obj(x0) else _as_list(x0),
+            t0=t0,
+        )
+        self.sigma = finite_float(sigma, "sigma")
+
+    @property
+    def radius(self) -> float:
+        """Radius :math:`|x_0|` of the circle on which the solution moves."""
+        return math.hypot(*(float(c) for c in self.x0))
+
+    def drift(self, t: float, x: Any) -> Any:
+        r""":math:`f(t, x) = -\tfrac12 \sigma^2 x`."""
+        return (-0.5 * self.sigma**2) * x
+
+    def diffusion(self, t: float, x: Any) -> Any:
+        r""":math:`g(t, x) = \sigma J x`, shape ``(..., 2, 1)``."""
+        xp = array_namespace(x)
+        rotated = xp.stack([-x[..., 1], x[..., 0]], axis=-1)
+        return (self.sigma * rotated)[..., None]
+
+    def exact_solution(self, t: Any, W: Any) -> Any:
+        r""":math:`X(t)` given :math:`W(t) - W(t_0)` of shape ``(..., 1)``.
+
+        The solution depends on the noise only; `t` is accepted for the
+        common interface.
+        """
+        xp = array_namespace(W)
+        angle = self.sigma * W[..., 0]
+        cos, sin = xp.cos(angle), xp.sin(angle)
+        x0 = asarray_like(self.x0, W)
+        return xp.stack([cos * x0[0] - sin * x0[1], sin * x0[0] + cos * x0[1]], axis=-1)
+
+    def __repr__(self) -> str:
+        """Return the parameters."""
+        x0 = tuple(float(c) for c in self.x0)
+        return f"BrownianMotionOnCircle(sigma={self.sigma}, x0={x0}, t0={self.t0})"
