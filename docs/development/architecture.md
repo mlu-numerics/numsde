@@ -629,6 +629,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-11-05 | Statistics run on the host in NumPy; `numsde._backend.to_numpy` moves per-path data from any backend and device |
 | 2026-11-05 | Reference for the bootstrap intervals: Efron and Tibshirani (1986), (7.2) percentile, (7.15) BCa, (8.5) acceleration in its jackknife form (10.8); checked against the article provided by the maintainer. It replaces the unchecked citations of Efron (1987) and Efron and Tibshirani (1993) |
 | 2026-11-06 | The streaming noise source belongs to M2 (it was described but assigned to no milestone; M1 needs only the `NoiseSource` interface, which `BrownianPath` implements). Its step-wise generation fits the iterated integrals of M2 |
+| 2026-11-10 | Tutorials are MyST-Markdown notebooks (`.md` with code cells, executed by myst-nb in every docs build; reviewable as text, openable in Jupyter via Jupytext). The first tutorial covers one pass: own SDE (Ornstein–Uhlenbeck), simulation, coupling, convergence studies against exact and reference solutions. matplotlib joins the `docs` dependency group for the figures |
 
 ## References
 

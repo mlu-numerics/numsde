@@ -59,6 +59,9 @@ entries here only refer to their errata ID.
 - `Solver.iterate`, which yields the values on the grid one step at a time.
 - Theory page on convergence studies, with the simulated coverage of the
   bootstrap intervals.
+- First tutorial, "Getting started": defining an SDE, simulating paths,
+  coupling step sizes through one Brownian path, and strong convergence
+  studies against an exact and a fine reference solution.
 - Port of the legacy script `num_exp_GBM.py` (Euler–Maruyama part) as
   `examples/strong_error_gbm.py`, and a regression test that reproduces the
   legacy errors from stored reference data.
