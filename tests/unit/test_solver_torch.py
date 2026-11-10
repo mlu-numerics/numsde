@@ -79,3 +79,45 @@ def test_sampling_rejects_numpy_for_a_tensor_initial_value():
     solver = Solver(problem, EulerMaruyama())
     with pytest.raises(ValueError, match="different array libraries"):
         solver.solve(times=[0.0, 1.0], seed=0, backend="numpy")
+
+
+def test_to_numpy_converts_tensors():
+    from numsde._backend import to_numpy
+
+    converted = to_numpy(torch.arange(3.0, dtype=torch.float64))
+    assert isinstance(converted, np.ndarray)
+    np.testing.assert_array_equal(converted, [0.0, 1.0, 2.0])
+
+
+def test_convergence_study_on_torch_equals_numpy():
+    from numsde.analysis import StrongConvergenceStudy
+
+    problem = LinearSystem()
+    grid = uniform_grid(1.0, 32)
+    kwargs = {"n_paths": 40, "seed": 4}
+    ref = WienerProcess(2).sample_path(grid, **kwargs)
+    path = WienerProcess(2).sample_path(grid, backend="torch", **kwargs)
+    for reference in ("exact", EulerMaruyama()):
+        args = {"reference": reference, "reference_refinement": 1}
+        on_numpy = StrongConvergenceStudy(problem, EulerMaruyama(), ref, [2, 4], **args)
+        on_torch = StrongConvergenceStudy(
+            problem, EulerMaruyama(), path, [2, 4], **args
+        )
+        np.testing.assert_allclose(on_torch.simulate(), on_numpy.simulate(), rtol=1e-12)
+
+
+@pytest.mark.gpu
+def test_convergence_study_on_cuda():
+    if not torch.cuda.is_available():
+        pytest.skip("no CUDA device")
+    from numsde.analysis import StrongConvergenceStudy
+
+    grid = uniform_grid(1.0, 64)
+    ref = WienerProcess(1).sample_path(grid, n_paths=200, seed=9)
+    path = WienerProcess(1).sample_path(
+        grid, n_paths=200, seed=9, backend="torch", device="cuda"
+    )
+    problem = GeometricBrownianMotion(mu=1.0, sigma=1.0)
+    on_cuda = StrongConvergenceStudy(problem, EulerMaruyama(), path, [1, 2, 4])
+    on_numpy = StrongConvergenceStudy(problem, EulerMaruyama(), ref, [1, 2, 4])
+    np.testing.assert_allclose(on_cuda.simulate(), on_numpy.simulate(), rtol=1e-12)

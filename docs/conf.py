@@ -51,7 +51,7 @@ autosummary_generate = True
 autodoc_typehints = "none"
 numpydoc_show_class_members = False
 numpydoc_xref_param_type = True
-numpydoc_xref_ignore = {"of", "or", "optional", "default", "array"}
+numpydoc_xref_ignore = {"of", "or", "optional", "default", "array", "iterator"}
 
 # -- Bibliography ------------------------------------------------------------
 bibtex_bibfiles = ["references.bib"]
@@ -71,13 +71,14 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "numpy": ("https://numpy.org/doc/stable", None),
     "scipy": ("https://docs.scipy.org/doc/scipy", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
 }
 if os.environ.get("NUMSDE_DOCS_OFFLINE"):  # build without network access
     intersphinx_mapping = {}
     nitpick_ignore_regex = [
         (
             r"py:.*",
-            r"(python:)?(numpy|scipy|types|abc|enum|list|int|float|bool|str|tuple)"
+            r"(python:)?(numpy|scipy|matplotlib|types|abc|enum|list|int|float|bool|str|tuple)"
             r"(\..*)?",
         )
     ]

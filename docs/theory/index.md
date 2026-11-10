@@ -42,6 +42,7 @@ Theory pages for individual schemes (under `schemes/`) and benchmark problems
 :maxdepth: 1
 
 brownian_motion
+convergence_studies
 schemes/index
 problems/index
 ```

@@ -185,7 +185,7 @@ enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 files = ["src/numsde"]
 
 [[tool.mypy.overrides]]
-module = ["array_api_compat.*"]
+module = ["array_api_compat.*", "matplotlib.*"]
 ignore_missing_imports = true
 
 # --------------------------------------------------------------------------- spelling

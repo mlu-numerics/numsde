@@ -30,6 +30,33 @@ This reference is generated from the docstrings in the source code.
    Solution
 ```
 
+## Convergence studies
+
+```{eval-rst}
+.. currentmodule:: numsde.analysis
+
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   StrongConvergenceStudy
+   StrongConvergenceResult
+```
+
+```{eval-rst}
+.. currentmodule:: numsde.analysis.statistics
+
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   mean_interval
+   fit_order
+   bootstrap_orders
+   jackknife_orders
+   bootstrap_interval
+```
+
 ## Schemes
 
 ```{eval-rst}

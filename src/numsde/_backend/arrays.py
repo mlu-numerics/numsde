@@ -16,12 +16,41 @@ __all__ = [
     "device_of",
     "is_real_floating",
     "owned_read_only",
+    "to_numpy",
 ]
 
 
 def device_of(x: Any) -> Any:
     """Return the device of array `x` (``"cpu"`` for NumPy)."""
     return array_api_compat.device(x)
+
+
+def to_numpy(x: Any) -> np.ndarray[Any, Any]:
+    """Return array `x` of any backend as a NumPy array on the host.
+
+    NumPy arrays are returned unchanged; arrays of other libraries are moved
+    to the CPU first (e.g. from a CUDA device) and then converted. Statistics
+    on small result arrays, such as per-path errors, are computed this way.
+
+    Parameters
+    ----------
+    x
+        Array in any Array API namespace.
+
+    Returns
+    -------
+    numpy.ndarray
+        The values of `x`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> to_numpy(np.arange(3))
+    array([0, 1, 2])
+    """
+    if isinstance(x, np.ndarray):
+        return x
+    return np.asarray(array_api_compat.to_device(x, "cpu"))
 
 
 def asarray_in(value: Any, xp: ModuleType, *, dtype: Any, device: Any) -> Any:
