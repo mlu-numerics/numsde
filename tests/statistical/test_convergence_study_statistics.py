@@ -17,7 +17,11 @@ from numsde.analysis.statistics import (
     fit_order,
     jackknife_orders,
 )
-from numsde.benchmarks import GeometricBrownianMotion, LinearSystem
+from numsde.benchmarks import (
+    BrownianMotionOnCircle,
+    GeometricBrownianMotion,
+    LinearSystem,
+)
 from numsde.schemes import EulerMaruyama
 from numsde.stepping import uniform_grid
 
@@ -47,8 +51,12 @@ def test_bootstrap_intervals_cover_the_true_order(method):
 
 @pytest.mark.parametrize(
     "problem",
-    [GeometricBrownianMotion(mu=1.0, sigma=1.0), LinearSystem()],
-    ids=["gbm", "linear_system"],
+    [
+        GeometricBrownianMotion(mu=1.0, sigma=1.0),
+        LinearSystem(),
+        BrownianMotionOnCircle(sigma=1.0),
+    ],
+    ids=["gbm", "linear_system", "circle"],
 )
 def test_study_finds_order_one_half(problem):
     path = WienerProcess(problem.noise_dim).sample_path(

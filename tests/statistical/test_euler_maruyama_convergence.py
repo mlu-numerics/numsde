@@ -12,7 +12,11 @@ import numpy as np
 import pytest
 
 from numsde import Solver, WienerProcess
-from numsde.benchmarks import GeometricBrownianMotion, LinearSystem
+from numsde.benchmarks import (
+    BrownianMotionOnCircle,
+    GeometricBrownianMotion,
+    LinearSystem,
+)
 from numsde.schemes import EulerMaruyama
 from numsde.stepping import uniform_grid
 
@@ -44,8 +48,12 @@ def fitted_order(steps, errors):
 
 @pytest.mark.parametrize(
     "problem",
-    [GeometricBrownianMotion(mu=1.0, sigma=1.0), LinearSystem()],
-    ids=["gbm", "linear_system"],
+    [
+        GeometricBrownianMotion(mu=1.0, sigma=1.0),
+        LinearSystem(),
+        BrownianMotionOnCircle(sigma=1.0),
+    ],
+    ids=["gbm", "linear_system", "circle"],
 )
 def test_strong_order_one_half(problem):
     steps, errors = strong_errors(problem, n_paths=10_000, seed=2026)
@@ -72,3 +80,21 @@ def test_weak_order_one_for_the_mean_of_gbm():
     # The bias of the scheme decays like h: e^1 - (1 + h)^(1/h) ~ e h / 2.
     bias = np.e - exact_mean_scheme
     assert 0.4 * np.e * h < bias < 0.5 * np.e * h
+
+
+def test_second_moment_on_the_circle():
+    # On a uniform grid, E|X_h^N|^2 = |x0|^2 (1 + sigma^4 h^2 / 4)^N exactly,
+    # so Euler-Maruyama drifts outwards in the mean square by O(h); the Monte
+    # Carlo estimate must agree within five standard errors.
+    sigma, n_steps, n_paths = 1.3, 8, 400_000
+    problem = BrownianMotionOnCircle(sigma=sigma, x0=(0.6, 0.8))
+    path = WienerProcess(1).sample_path(
+        uniform_grid(1.0, n_steps), n_paths=n_paths, seed=11
+    )
+    final = Solver(problem, EulerMaruyama()).solve(path, save="final").final
+    radius2 = np.sum(final**2, axis=-1)
+    h = 1.0 / n_steps
+    expected = (1 + sigma**4 * h**2 / 4) ** n_steps
+    standard_error = radius2.std(ddof=1) / np.sqrt(n_paths)
+    assert abs(radius2.mean() - expected) < 5 * standard_error
+    assert expected - 1 > 10 * standard_error  # the drift is resolved
