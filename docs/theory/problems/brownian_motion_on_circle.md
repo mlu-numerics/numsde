@@ -94,5 +94,9 @@ radius identity of every step on every path.
 
 ## References
 
-Registry entry: `numsde.benchmarks.PROBLEMS["brownian_motion_on_circle"]`.
-A literature reference for the problem is still to be added.
+- {cite}`Mao2008`, Chapter 2, Example 2.3: the process
+  $(\cos B(t), \sin B(t))$, called *Brownian motion on the unit circle*, and
+  its SDE (2.5), derived with Itô's formula. This is the case $\sigma = 1$,
+  $x_0 = (1, 0)$, $t_0 = 0$ of the problem above; the parameters $\sigma$ and
+  $x_0$ are a generalization of this library.
+- Registry entry: `numsde.benchmarks.PROBLEMS["brownian_motion_on_circle"]`.

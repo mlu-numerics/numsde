@@ -261,8 +261,9 @@ class BrownianMotionOnCircle(ItoSDE):
 
     a rotation of :math:`x_0` by the random angle
     :math:`\sigma (W(t) - W(t_0))`. It stays on the circle of radius
-    :math:`|x_0|`; schemes in general do not. See
-    :doc:`/theory/problems/brownian_motion_on_circle`.
+    :math:`|x_0|`; schemes in general do not. The case
+    :math:`\sigma = 1`, :math:`x_0 = (1, 0)` is Example 2.3 in Mao (2008),
+    Chapter 2. See :doc:`/theory/problems/brownian_motion_on_circle`.
 
     Parameters
     ----------
