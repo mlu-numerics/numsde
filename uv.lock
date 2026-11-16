@@ -2256,6 +2256,7 @@ torch = [
 dev = [
     { name = "codespell" },
     { name = "hypothesis" },
+    { name = "matplotlib" },
     { name = "mypy" },
     { name = "myst-nb" },
     { name = "myst-parser" },
@@ -2274,6 +2275,7 @@ dev = [
     { name = "sphinxcontrib-bibtex" },
 ]
 docs = [
+    { name = "matplotlib" },
     { name = "myst-nb" },
     { name = "myst-parser" },
     { name = "numpydoc" },
@@ -2314,6 +2316,7 @@ provides-extras = ["all", "plot", "symbolic", "torch"]
 dev = [
     { name = "codespell", specifier = ">=2.3" },
     { name = "hypothesis", specifier = ">=6.100" },
+    { name = "matplotlib", specifier = ">=3.8" },
     { name = "mypy", specifier = ">=1.11" },
     { name = "myst-nb", specifier = ">=1.1" },
     { name = "myst-parser", specifier = ">=3.0" },
@@ -2330,6 +2333,7 @@ dev = [
     { name = "sphinxcontrib-bibtex", specifier = ">=2.6" },
 ]
 docs = [
+    { name = "matplotlib", specifier = ">=3.8" },
     { name = "myst-nb", specifier = ">=1.1" },
     { name = "myst-parser", specifier = ">=3.0" },
     { name = "numpydoc", specifier = ">=1.7" },
