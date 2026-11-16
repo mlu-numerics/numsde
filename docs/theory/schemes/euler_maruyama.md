@@ -54,13 +54,20 @@ deterministic.
 | Strong, final time in $L^1$, $\mathbb{E}\,\vert X_h^N - X(T)\vert$ | $1/2$ | standard | {cite}`KloedenPlaten1992`, Theorem 10.2.2 |
 | Strong, final time in $L^2$, $\big(\mathbb{E}\,\vert X_h^N - X(T)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`MilsteinTretyakov2021`, Theorem 1.1.1 (fundamental theorem on mean-square order of convergence) |
 | Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^2\big)^{1/2}$ | $1/2$ | standard | {cite}`Mao2008`, Chapter 2, Theorem 7.3 |
-| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^p\big)^{1/p}$ | $1/2$ | standard, $p \ge 2$ | Kanagawa (1988), *Yokohama Math. J.* 36, 79–86 † |
+| Strong, uniformly on the grid, $\big(\mathbb{E}\max_n \vert X_h^n - X(t_n)\vert^p\big)^{1/p}$ | $1/2$ | $p \ge 2$; $f$ and $g$ **bounded** and Lipschitz continuous in $x$ and $t$ | {cite}`Kanagawa1988`, Theorem 1, (1.6) |
 | Strong, additive noise | $1$ | $g = g(t)$ independent of $x$ and Lipschitz continuous in $t$; $f$ twice continuously differentiable in $x$ with bounded first and second derivatives, and Lipschitz continuous in $t$ | † see below |
 | Weak, $\vert \mathbb{E}\,\varphi(X_h^N) - \mathbb{E}\,\varphi(X(T))\vert$ | $1$ | $f$, $g$, $\varphi$ smooth with polynomially bounded derivatives | {cite}`KloedenPlaten1992`, Section 14.1 |
 
-† Not yet checked against the source. Kanagawa (1988) is said to contain the
-proof for $p \ge 2$; the article could not be consulted so far, so it is not
-yet in the bibliography.
+† Not yet checked against the source.
+
+The result for $p \ge 2$ needs stronger assumptions than the standard ones:
+bounded coefficients instead of linear growth, and Lipschitz continuity in $t$
+instead of Hölder continuity of order $1/2$. Under these assumptions Kanagawa
+bounds the error of the continuous-time Euler–Maruyama approximation uniformly
+on $[0, 1]$, which coincides with the scheme at the grid points; non-uniform
+grids are allowed. The benchmark problems with linear, hence unbounded,
+coefficients are not covered. Under the standard assumptions the table gives
+a reference for $p = 2$ only.
 
 The $L^1$ and $L^2$ errors at the final time are bounded by the $L^2$ error
 uniformly on the grid, so order $1/2$ of the latter implies order $1/2$ of
@@ -150,4 +157,4 @@ projected variants for this case follow in milestone M3.
 ## References
 
 {cite}`KloedenPlaten1992`, {cite}`MilsteinTretyakov2021`, {cite}`Mao2008`,
-{cite}`HutzenthalerJentzenKloeden2011`; Kanagawa (1988), not yet checked.
+{cite}`Kanagawa1988`, {cite}`HutzenthalerJentzenKloeden2011`.

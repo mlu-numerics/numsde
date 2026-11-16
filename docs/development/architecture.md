@@ -630,6 +630,7 @@ the remaining items follow in phase 2 after the lecture.
 | 2026-11-05 | Reference for the bootstrap intervals: Efron and Tibshirani (1986), (7.2) percentile, (7.15) BCa, (8.5) acceleration in its jackknife form (10.8); checked against the article provided by the maintainer. It replaces the unchecked citations of Efron (1987) and Efron and Tibshirani (1993) |
 | 2026-11-06 | The streaming noise source belongs to M2 (it was described but assigned to no milestone; M1 needs only the `NoiseSource` interface, which `BrownianPath` implements). Its step-wise generation fits the iterated integrals of M2 |
 | 2026-11-06 | Third M1 test problem `BrownianMotionOnCircle`: dX = -σ²/2 X dt + σ J X dW in the plane with scalar noise; exact solution a rotation of x0 by σ(W(t) - W(t0)); the radius is invariant, and Euler–Maruyama drifts outwards in the mean square, E\|X_h^N\|² = \|x0\|²(1 + σ⁴h²/4)^N, which the tests check exactly |
+| 2026-11-16 | Literature check of Kanagawa (1988) by the maintainer (issue #14): Theorem 1, (1.6), gives strong order 1/2 uniformly in time in $L^p$ for every $p \ge 2$, but for coefficients that are bounded and Lipschitz continuous in $x$ and $t$. The Euler–Maruyama page states the $L^p$ row with exactly these assumptions and notes that the benchmark problems with linear coefficients are not covered; `Kanagawa1988` enters `references.bib` without the MR number, which the article does not show. A reference for $p > 2$ under linear growth is tracked in issue #20 |
 
 ## References
 
@@ -640,8 +641,7 @@ Literature for the planned schemes, by topic. Entries move into
   Platen and Wright (1992); Wiktorsson (2001); Mrongowius and Rößler (2022);
   Rößler (2010).
 - *Convergence of Euler–Maruyama:* Milstein and Tretyakov (2021); Mao (2008);
-  Kanagawa (1988), *Yokohama Math. J.* 36, 79–86, MR978877, still to be
-  checked (strong error uniformly on the grid for $p \ge 2$).
+  Kanagawa (1988).
 - *Superlinear coefficients and adaptivity:* Hutzenthaler, Jentzen and Kloeden
   (2011, 2012); Wang and Gan (2013); Mao (2015); Beyn, Isaak and Kruse (2016,
   2017); Kelly and Lord (2018).
