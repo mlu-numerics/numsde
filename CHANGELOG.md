@@ -51,6 +51,9 @@ entries here only refer to their errata ID.
 - `asarray_like` to convert problem parameters to the backend of the state.
 - Theory pages for the Euler–Maruyama scheme, geometric Brownian motion and
   the linear system.
+- Euler–Maruyama theory page: the strong order in $L^p$, $p \ge 2$, cites
+  Kanagawa (1988), Theorem 1, with its assumptions (bounded coefficients,
+  Lipschitz continuous in space and time).
 - `numsde.analysis.StrongConvergenceStudy` and `StrongConvergenceResult`:
   strong errors uniformly on the grid or at the final time against the exact
   solution or a scheme on a refined path, confidence intervals of the errors,
