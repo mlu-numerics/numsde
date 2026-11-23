@@ -198,9 +198,27 @@ pathwise errors have heavy tails, is explained on the theory page
 
 The Ornstein–Uhlenbeck solution
 $X(t) = e^{-\lambda t} x_0 + \sigma \int_0^t e^{-\lambda(t-s)}\,\mathrm{d}W(s)$
-depends on the whole path of $W$, not only on $W(t)$, so there is no
-`exact_solution` to compare with. Instead, the study can use a scheme on a
-finer grid as reference: the path is refined by the Brownian bridge, here
+depends on the whole path of $W$, not only on $W(t)$. It therefore does not
+fit the interface `exact_solution(t, W)`, which receives only
+$W(t) - W(t_0)$.
+
+The solution can still be simulated exactly. On a step of length $h$,
+
+$$
+X(t_{n+1}) = e^{-\lambda h} X(t_n) + \sigma I_n, \qquad
+I_n = \int_{t_n}^{t_{n+1}} e^{-\lambda (t_{n+1} - s)}\,\mathrm{d}W(s),
+$$
+
+and $(I_n, \Delta W_n)$ is a centered Gaussian vector with
+$\operatorname{Var} I_n = \frac{1 - e^{-2\lambda h}}{2\lambda}$,
+$\operatorname{Cov}(I_n, \Delta W_n) = \frac{1 - e^{-\lambda h}}{\lambda}$ and
+$\operatorname{Var} \Delta W_n = h$. Sampling $I_n$ together with the
+increments on the finest grid yields the exact solution at every grid point,
+coupled to the same noise as the scheme on all coarser grids. NumSDE does not
+offer this joint sampling yet.
+
+This tutorial takes the route that works for every SDE: a scheme on a finer
+grid serves as reference. The path is refined by the Brownian bridge, here
 with 16 substeps per step, so the reference sees the same noise as all coarse
 approximations.
 
